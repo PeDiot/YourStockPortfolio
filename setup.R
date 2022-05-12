@@ -56,7 +56,10 @@ stock_tickers <- c("1QZ.F",
                    "B1C.F", 
                    "NNND.F", 
                    "FB2A.F", 
-                   "SU.PA")
+                   "SU.PA",
+                   "NVD.F", 
+                   "TL0.F", 
+                   "NFC.F")
 stock_names <- c("Coinbase", 
                  "LVMH",
                  "L'Oréal", 
@@ -81,7 +84,10 @@ stock_names <- c("Coinbase",
                  "Baidu", 
                  "Tencent", 
                  "Meta Platforms", 
-                 "Schneider Electric")
+                 "Schneider Electric", 
+                 "NVIDIA", 
+                 "Tesla", 
+                 "Netflix")
 names(stock_tickers) <- stock_names
 
 crypto_tickers <- c("BTC-EUR", 
@@ -142,7 +148,8 @@ my_tickers <- c("BTC-EUR",
                 "MATIC-EUR", 
                 "MANA-EUR", 
                 "1QZ.F", 
-                "AMZ.F")
+                "AMZ.F", 
+                "AI.PA")
 
 my_tickers_ix <- lapply(1:nrow(symbols), 
                         function(ix){

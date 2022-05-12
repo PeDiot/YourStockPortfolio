@@ -31,20 +31,23 @@ server <- function(input, output, session) {
           input$`num_shares_MANA-EUR`,
           input$`num_shares_1QZ.F`, 
           input$`num_shares_AMZ.F`, 
+          input$`num_shares_AI.PA`, 
           # buying dates
           input$`buying_date_BTC-EUR`,
           input$`buying_date_ETH-EUR`,
           input$`buying_date_MATIC-EUR`,
           input$`buying_date_MANA-EUR`,
           input$`buying_date_1QZ.F`, 
-          input$`buying_date_AMZ.F`),
+          input$`buying_date_AMZ.F`, 
+          input$`buying_date_AI.PA`),
         {
           num_shares <- c(input$`num_shares_BTC-EUR`,
                           input$`num_shares_ETH-EUR`,
                           input$`num_shares_MATIC-EUR`,
                           input$`num_shares_MANA-EUR`,
                           input$`num_shares_1QZ.F`, 
-                          input$`num_shares_AMZ.F`)
+                          input$`num_shares_AMZ.F`, 
+                          input$`num_shares_AI.PA`)
           names(num_shares) <- my_tickers
           
           buying_dates <- c(input$`buying_date_BTC-EUR`,
@@ -52,7 +55,8 @@ server <- function(input, output, session) {
                             input$`buying_date_MATIC-EUR`,
                             input$`buying_date_MANA-EUR`, 
                             input$`buying_date_1QZ.F`, 
-                            input$`buying_date_AMZ.F`)
+                            input$`buying_date_AMZ.F`,
+                            input$`buying_date_AI.PA`)
           names(buying_dates) <- my_tickers
           
           assets_value_list <- compute_assets_value(data = yf_data, 
@@ -139,6 +143,7 @@ server <- function(input, output, session) {
           input$`num_shares_MANA-EUR`,
           input$`num_shares_1QZ.F`, 
           input$`num_shares_AMZ.F`, 
+          input$`num_shares_AI.PA`, 
           # buying dates
           input$`buying_date_BTC-EUR`,
           input$`buying_date_ETH-EUR`,
@@ -146,6 +151,7 @@ server <- function(input, output, session) {
           input$`buying_date_MANA-EUR`,
           input$`buying_date_1QZ.F`, 
           input$`buying_date_AMZ.F`, 
+          input$`buying_date_AI.PA`, 
           # 
           input$ticker_fin_analysis, 
           input$start_date_fin_analysis),
@@ -158,7 +164,8 @@ server <- function(input, output, session) {
                           input$`num_shares_MATIC-EUR`,
                           input$`num_shares_MANA-EUR`,
                           input$`num_shares_1QZ.F`, 
-                          input$`num_shares_AMZ.F`)
+                          input$`num_shares_AMZ.F`, 
+                          input$`num_shares_AI.PA`)
           names(num_shares) <- my_tickers
           
           buying_dates <- c(input$`buying_date_BTC-EUR`,
@@ -166,7 +173,8 @@ server <- function(input, output, session) {
                             input$`buying_date_MATIC-EUR`,
                             input$`buying_date_MANA-EUR`, 
                             input$`buying_date_1QZ.F`, 
-                            input$`buying_date_AMZ.F`)
+                            input$`buying_date_AMZ.F`,
+                            input$`buying_date_AI.PA`)
           names(buying_dates) <- my_tickers
           
           assets_value_list <- compute_assets_value(data = yf_data, 
@@ -284,6 +292,7 @@ server <- function(input, output, session) {
           input$`num_shares_MANA-EUR`,
           input$`num_shares_1QZ.F`, 
           input$`num_shares_AMZ.F`, 
+          input$`num_shares_AI.PA`, 
           # buying dates
           input$`buying_date_BTC-EUR`,
           input$`buying_date_ETH-EUR`,
@@ -291,6 +300,7 @@ server <- function(input, output, session) {
           input$`buying_date_MANA-EUR`,
           input$`buying_date_1QZ.F`, 
           input$`buying_date_AMZ.F`, 
+          input$`buying_date_AI.PA`, 
           # 
           input$ticker_dat, input$start_date_dat),
         {
@@ -302,7 +312,8 @@ server <- function(input, output, session) {
                           input$`num_shares_MATIC-EUR`,
                           input$`num_shares_MANA-EUR`,
                           input$`num_shares_1QZ.F`, 
-                          input$`num_shares_AMZ.F`)
+                          input$`num_shares_AMZ.F`, 
+                          input$`num_shares_AI.PA`)
           names(num_shares) <- my_tickers
           
           buying_dates <- c(input$`buying_date_BTC-EUR`,
@@ -310,7 +321,8 @@ server <- function(input, output, session) {
                             input$`buying_date_MATIC-EUR`,
                             input$`buying_date_MANA-EUR`, 
                             input$`buying_date_1QZ.F`, 
-                            input$`buying_date_AMZ.F`)
+                            input$`buying_date_AMZ.F`,
+                            input$`buying_date_AI.PA`)
           names(buying_dates) <- my_tickers
           
           assets_value_list <- compute_assets_value(data = yf_data, 
@@ -418,13 +430,15 @@ server <- function(input, output, session) {
           input$`num_shares_MANA-EUR`,
           input$`num_shares_1QZ.F`, 
           input$`num_shares_AMZ.F`, 
+          input$`num_shares_AI.PA`, 
           # buying dates
           input$`buying_date_BTC-EUR`,
           input$`buying_date_ETH-EUR`,
           input$`buying_date_MATIC-EUR`,
           input$`buying_date_MANA-EUR`,
           input$`buying_date_1QZ.F`, 
-          input$`buying_date_AMZ.F`,
+          input$`buying_date_AMZ.F`, 
+          input$`buying_date_AI.PA`,
           #
           input$indicator, 
           input$recommendation_start_date, 
@@ -438,7 +452,8 @@ server <- function(input, output, session) {
                           input$`num_shares_MATIC-EUR`,
                           input$`num_shares_MANA-EUR`,
                           input$`num_shares_1QZ.F`, 
-                          input$`num_shares_AMZ.F`)
+                          input$`num_shares_AMZ.F`, 
+                          input$`num_shares_AI.PA`)
           names(num_shares) <- my_tickers
           
           buying_dates <- c(input$`buying_date_BTC-EUR`,
@@ -446,7 +461,8 @@ server <- function(input, output, session) {
                             input$`buying_date_MATIC-EUR`,
                             input$`buying_date_MANA-EUR`, 
                             input$`buying_date_1QZ.F`, 
-                            input$`buying_date_AMZ.F`)
+                            input$`buying_date_AMZ.F`,
+                            input$`buying_date_AI.PA`)
           names(buying_dates) <- my_tickers
           
 ## compute recommendations --------------------------------------------------------------
