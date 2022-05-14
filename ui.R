@@ -79,7 +79,7 @@ ui <- fluidPage(
 ## inputs ---------------------------------------------------------
                         sidebarPanel( 
                           width = 3, 
-                          h4(strong("Your portfolio"),
+                          h4(strong("Your Portfolio"),
                              style = "color:#76787B;"), 
                           hr(),
                           tags$head(tags$style("h5 {color:#76787B;}")),
@@ -97,7 +97,7 @@ ui <- fluidPage(
                                        buying_date = "2022-02-03"),
                           h5(strong("Decentraland (MANA)")), 
                           asset_inputs(asset = "Decentraland (MANA)", 
-                                       val = 5.77722346, 
+                                       val = 10.8270573, 
                                        buying_date = "2022-03-02"), 
                           h5(strong("Coinbase")), 
                           asset_inputs(asset = "Coinbase", 
@@ -106,11 +106,7 @@ ui <- fluidPage(
                           h5(strong("Amazon")), 
                           asset_inputs(asset = "Amazon", 
                                        val = 0.00790615, 
-                                       buying_date = "2022-04-08"),
-                          h5(strong("Air Liquide")), 
-                          asset_inputs(asset = "Air Liquide", 
-                                       val = 0.19090560, 
-                                       buying_date = "2022-05-12")
+                                       buying_date = "2022-04-08")
                         ), 
                         
                         mainPanel(
@@ -176,7 +172,7 @@ ui <- fluidPage(
                         ## inputs ---------------------------------------------------------
                         sidebarPanel(
                           width = 3, 
-                          h4(strong("Stock Analysis"), 
+                          h4(strong("Your Financial Indicators"), 
                              style = "color:#76787B;"), 
                           hr(), 
                           br(), 
@@ -289,7 +285,7 @@ ui <- fluidPage(
                sidebarLayout(
                  sidebarPanel(
                    width = 3, 
-                   h4(strong("Financial data collection", 
+                   h4(strong("Your Financial Data", 
                              style = "color:#76787B;")),
                    hr(), 
                    br(), 
@@ -358,7 +354,7 @@ ui <- fluidPage(
                 sidebarLayout(
                   sidebarPanel(
                     width = 3, 
-                    h4(strong("Stock recommendation system", 
+                    h4(strong("Stock Recommendation System", 
                               style = "color:#76787B;")),
                     p("Stock selection is based on the ",
                       a(href = "https://www.investopedia.com/terms/r/rsi.asp",
