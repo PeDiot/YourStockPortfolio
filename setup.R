@@ -60,6 +60,7 @@ stock_tickers <- c("1QZ.F",
                    "NVD.F", 
                    "TL0.F", 
                    "NFC.F")
+
 stock_names <- c("Coinbase", 
                  "LVMH",
                  "L'Oréal", 
@@ -148,8 +149,7 @@ my_tickers <- c("BTC-EUR",
                 "MATIC-EUR", 
                 "MANA-EUR", 
                 "1QZ.F", 
-                "AMZ.F", 
-                "AI.PA")
+                "AMZ.F")
 
 my_tickers_ix <- lapply(1:nrow(symbols), 
                         function(ix){
@@ -160,6 +160,22 @@ my_tickers_ix <- lapply(1:nrow(symbols),
 
 names(my_tickers) <- symbols[my_tickers_ix, ] %>%
   names()
+
+my_buying_dates <- c("2022-03-02", 
+                     "2022-02-02", 
+                     "2022-02-03", 
+                     "2022-03-02", 
+                     "2022-03-29",
+                     "2022-04-08")
+names(my_buying_dates) <- my_tickers
+
+my_num_shares <- c(0.00037241, 
+                   0.00594658, 
+                   10.8270573, 
+                   10.8270573, 
+                   0.10934065, 
+                   0.00790615)
+names(my_num_shares) <- my_tickers
 
 # Utils -------------------------------------------------------
 
