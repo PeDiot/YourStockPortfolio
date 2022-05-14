@@ -31,23 +31,34 @@ server <- function(input, output, session) {
           input$`num_shares_MANA-EUR`,
           input$`num_shares_1QZ.F`, 
           input$`num_shares_AMZ.F`, 
-          input$`num_shares_AI.PA`, 
           # buying dates
           input$`buying_date_BTC-EUR`,
           input$`buying_date_ETH-EUR`,
           input$`buying_date_MATIC-EUR`,
           input$`buying_date_MANA-EUR`,
           input$`buying_date_1QZ.F`, 
-          input$`buying_date_AMZ.F`, 
-          input$`buying_date_AI.PA`),
+          input$`buying_date_AMZ.F`),
         {
+          
+          req(c(input$`num_shares_BTC-EUR`,
+                input$`num_shares_ETH-EUR`,
+                input$`num_shares_MATIC-EUR`,
+                input$`num_shares_MANA-EUR`,
+                input$`num_shares_1QZ.F`, 
+                input$`num_shares_AMZ.F`))
+          req(c(input$`buying_date_BTC-EUR`,
+                input$`buying_date_ETH-EUR`,
+                input$`buying_date_MATIC-EUR`,
+                input$`buying_date_MANA-EUR`, 
+                input$`buying_date_1QZ.F`, 
+                input$`buying_date_AMZ.F`))
+          
           num_shares <- c(input$`num_shares_BTC-EUR`,
                           input$`num_shares_ETH-EUR`,
                           input$`num_shares_MATIC-EUR`,
                           input$`num_shares_MANA-EUR`,
                           input$`num_shares_1QZ.F`, 
-                          input$`num_shares_AMZ.F`, 
-                          input$`num_shares_AI.PA`)
+                          input$`num_shares_AMZ.F`)
           names(num_shares) <- my_tickers
           
           buying_dates <- c(input$`buying_date_BTC-EUR`,
@@ -55,16 +66,15 @@ server <- function(input, output, session) {
                             input$`buying_date_MATIC-EUR`,
                             input$`buying_date_MANA-EUR`, 
                             input$`buying_date_1QZ.F`, 
-                            input$`buying_date_AMZ.F`,
-                            input$`buying_date_AI.PA`)
+                            input$`buying_date_AMZ.F`)
           names(buying_dates) <- my_tickers
           
-          assets_value_list <- compute_assets_value(data = yf_data, 
+          assets_value_list_wid <- compute_assets_value(data = yf_data, 
                                                     num_shares = num_shares) 
           
           my_assets_value <- my_tickers %>%
             lapply(FUN = query_assets_since_buying_date, 
-                   assets_dat = assets_value_list[my_tickers],
+                   assets_dat = assets_value_list_wid[my_tickers],
                    buying_dates = buying_dates) %>%
             bind_rows()
            
@@ -135,335 +145,248 @@ server <- function(input, output, session) {
       )
       
 # financial indicators per asset --------------------------------------------------------------
-      observeEvent(
-        c(# number of shares 
-          input$`num_shares_BTC-EUR`,
-          input$`num_shares_ETH-EUR`,
-          input$`num_shares_MATIC-EUR`,
-          input$`num_shares_MANA-EUR`,
-          input$`num_shares_1QZ.F`, 
-          input$`num_shares_AMZ.F`, 
-          input$`num_shares_AI.PA`, 
-          # buying dates
-          input$`buying_date_BTC-EUR`,
-          input$`buying_date_ETH-EUR`,
-          input$`buying_date_MATIC-EUR`,
-          input$`buying_date_MANA-EUR`,
-          input$`buying_date_1QZ.F`, 
-          input$`buying_date_AMZ.F`, 
-          input$`buying_date_AI.PA`, 
-          # 
-          input$ticker_fin_analysis, 
-          input$start_date_fin_analysis),
-        {
-          
-## inputs --------------------------------------------------------------
-          
-          num_shares <- c(input$`num_shares_BTC-EUR`,
-                          input$`num_shares_ETH-EUR`,
-                          input$`num_shares_MATIC-EUR`,
-                          input$`num_shares_MANA-EUR`,
-                          input$`num_shares_1QZ.F`, 
-                          input$`num_shares_AMZ.F`, 
-                          input$`num_shares_AI.PA`)
-          names(num_shares) <- my_tickers
-          
-          buying_dates <- c(input$`buying_date_BTC-EUR`,
-                            input$`buying_date_ETH-EUR`,
-                            input$`buying_date_MATIC-EUR`,
-                            input$`buying_date_MANA-EUR`, 
-                            input$`buying_date_1QZ.F`, 
-                            input$`buying_date_AMZ.F`,
-                            input$`buying_date_AI.PA`)
-          names(buying_dates) <- my_tickers
-          
-          assets_value_list <- compute_assets_value(data = yf_data, 
-                                                    num_shares = num_shares) 
-          
+  
+    assets_value_list <- compute_assets_value(data = yf_data, 
+                                              num_shares = my_num_shares)        
+  
 ## start date financial analysis --------------------------------------------------------------
-          output$start_date_fin_analysis_out <- renderUI({
-            
-            if (input$ticker_fin_analysis %in% my_tickers){
-              date <- today() - days(35)
-              if (buying_dates[input$ticker_fin_analysis] < date){
-                date <- buying_dates[input$ticker_fin_analysis] 
-              }
-            }
-            else{
-              date <- today() %m-% months(6)
-            }
-            
-            airDatepickerInput(
-              inputId = "start_date_fin_analysis",
-              label = h5("How far back do you want to go?", 
-                         style = "color:#76787B;"),
-              value = date,
-              minDate = date_init, 
-              maxDate = today() - days(35),
-              width = "200px",
-              placeholder = "",
-              multiple = F, 
-              clearButton = F)
-            
-          })
+  
+    observeEvent(
+      input$ticker_fin_analysis, 
+      {
+        output$start_date_fin_analysis_out <- renderUI({
           
+          if (input$ticker_fin_analysis %in% my_tickers){
+            date <- today() - days(35)
+            if (my_buying_dates[input$ticker_fin_analysis] < date){
+              date <- my_buying_dates[input$ticker_fin_analysis] 
+            }
+          }
+          else{
+            date <- today() %m-% months(6)
+          }
+          
+          airDatepickerInput(
+            inputId = "start_date_fin_analysis",
+            label = h5("How far back do you want to go?", 
+                       style = "color:#76787B;"),
+            value = date,
+            minDate = date_init, 
+            maxDate = today() - days(35),
+            width = "200px",
+            placeholder = "",
+            multiple = F, 
+            clearButton = F)
+          
+        })
+        
+      }
+    )
+  
+  observeEvent(
+    
+    c(input$ticker_fin_analysis, 
+      input$start_date_fin_analysis),
+    {
+      
+      req(input$start_date_fin_analysis)
+      req(input$ticker_fin_analysis)
+      
 ## asset data with indicators --------------------------------------------------------------
-          req(input$start_date_fin_analysis)
-          prices <- assets_value_list[[input$ticker_fin_analysis]] %>%
-            filter( date >= input$start_date_fin_analysis) %>%
-            add_moving_avg(window = 20) %>%
-            add_moving_avg(window = 50) %>%
-            add_moving_avg(window = 100) %>%
-            add_macd() %>%
-            add_rsi()
-          
+      prices <- assets_value_list[[input$ticker_fin_analysis]] %>%
+        filter( date >= input$start_date_fin_analysis) %>%
+        add_moving_avg(window = 20) %>%
+        add_moving_avg(window = 50) %>%
+        add_moving_avg(window = 100) %>%
+        add_macd() %>%
+        add_rsi()
+      
 ## asset returns --------------------------------------------------------------
-          daily_ret <- prices %>%
-            compute_daily_returns() 
-          asset_cumret <- daily_ret %>%
-            compute_cumulative_returns(all = F)
-          
+      daily_ret <- prices %>%
+        compute_daily_returns() 
+      asset_cumret <- daily_ret %>%
+        compute_cumulative_returns(all = F)
+      
 ## asset global evolution --------------------------------------------------------------
-          output$asset_evolution <- renderPlotly({
-            plot_evolution(price_dat = prices %>%
-                             dplyr::select(c(date, close)) %>%
-                             rename(value = close), 
-                           cum_ret_dat = asset_cumret)
-          })
-          
+      output$asset_evolution <- renderPlotly({
+        plot_evolution(price_dat = prices %>%
+                         dplyr::select(c(date, close)) %>%
+                         rename(value = close), 
+                       cum_ret_dat = asset_cumret)
+      })
+      
 ## asset last price --------------------------------------------------------------
-          output$asset_last_price <- renderInfoBox({
-            val <- get_current_price(data = prices)  
-            infoBox_last_price(last_price = val)
-            
-          })
-          
+      output$asset_last_price <- renderInfoBox({
+        val <- get_current_price(data = prices)  
+        infoBox_last_price(last_price = val)
+        
+      })
+      
 ## asset number of shares --------------------------------------------------------------
-          output$asset_num_shares <- renderInfoBox({
-            if (input$ticker_fin_analysis %in% my_tickers){
-              num_shares <- num_shares[input$ticker_fin_analysis]
-            }
-            else{
-              num_shares <- 0
-            }
-            infoBox_num_shares(num_shares)
-          })
-          
-          
+      output$asset_num_shares <- renderInfoBox({
+        if (input$ticker_fin_analysis %in% my_tickers){
+          num_shares <- my_num_shares[input$ticker_fin_analysis]
+        }
+        else{
+          num_shares <- 0
+        }
+        infoBox_num_shares(num_shares)
+      })
+      
+      
 ## asset last cumulative returns --------------------------------------------------------------
-          output$asset_last_cumret <- renderInfoBox({
-            last_cumret <- get_current_cumret(asset_cumret)
-            infoBox_last_cumret(last_cumret)
-          })
-          
+      output$asset_last_cumret <- renderInfoBox({
+        last_cumret <- get_current_cumret(asset_cumret)
+        infoBox_last_cumret(last_cumret)
+      })
+      
 ## candlestick with MAs --------------------------------------------------------------
-          output$candlestick_plot <- renderPlotly({
-            prices %>%
-              candlestick_chart(ticker = input$ticker_fin_analysis) 
-          })
-          
+      output$candlestick_plot <- renderPlotly({
+        prices %>%
+          candlestick_chart(ticker = input$ticker_fin_analysis) 
+      })
+      
 ## bollinger bands --------------------------------------------------------------
-          bbands_dat <- calculate_bbands(price_data = prices)
-          output$bbands_plot <- renderPlotly({
-            bbands_chart(bbands_dat, input$ticker_fin_analysis)
-          })
-          
+      bbands_dat <- calculate_bbands(price_data = prices)
+      output$bbands_plot <- renderPlotly({
+        bbands_chart(bbands_dat, input$ticker_fin_analysis)
+      })
+      
 ## MACD --------------------------------------------------------------
-          output$macd_plot <- renderPlotly({
-            prices %>%
-              macd_chart(ticker = input$ticker_fin_analysis) 
-          })
-          
+      output$macd_plot <- renderPlotly({
+        prices %>%
+          macd_chart(ticker = input$ticker_fin_analysis) 
+      })
+      
 ## RSI --------------------------------------------------------------
-          output$rsi_plot <- renderPlotly({
-            prices %>%
-              rsi_chart(ticker = input$ticker_fin_analysis) 
-          })
-          
-        }
-      )
+      output$rsi_plot <- renderPlotly({
+        prices %>%
+          rsi_chart(ticker = input$ticker_fin_analysis) 
+      })
       
+      
+    }
+  )
+          
 # data --------------------------------------------------------------
-      observeEvent(
-        c(# number of shares 
-          input$`num_shares_BTC-EUR`,
-          input$`num_shares_ETH-EUR`,
-          input$`num_shares_MATIC-EUR`,
-          input$`num_shares_MANA-EUR`,
-          input$`num_shares_1QZ.F`, 
-          input$`num_shares_AMZ.F`, 
-          input$`num_shares_AI.PA`, 
-          # buying dates
-          input$`buying_date_BTC-EUR`,
-          input$`buying_date_ETH-EUR`,
-          input$`buying_date_MATIC-EUR`,
-          input$`buying_date_MANA-EUR`,
-          input$`buying_date_1QZ.F`, 
-          input$`buying_date_AMZ.F`, 
-          input$`buying_date_AI.PA`, 
-          # 
-          input$ticker_dat, input$start_date_dat),
-        {
-          
-## inputs --------------------------------------------------------------
-          
-          num_shares <- c(input$`num_shares_BTC-EUR`,
-                          input$`num_shares_ETH-EUR`,
-                          input$`num_shares_MATIC-EUR`,
-                          input$`num_shares_MANA-EUR`,
-                          input$`num_shares_1QZ.F`, 
-                          input$`num_shares_AMZ.F`, 
-                          input$`num_shares_AI.PA`)
-          names(num_shares) <- my_tickers
-          
-          buying_dates <- c(input$`buying_date_BTC-EUR`,
-                            input$`buying_date_ETH-EUR`,
-                            input$`buying_date_MATIC-EUR`,
-                            input$`buying_date_MANA-EUR`, 
-                            input$`buying_date_1QZ.F`, 
-                            input$`buying_date_AMZ.F`,
-                            input$`buying_date_AI.PA`)
-          names(buying_dates) <- my_tickers
-          
-          assets_value_list <- compute_assets_value(data = yf_data, 
-                                                    num_shares = num_shares) 
-          
+
 ## start date data --------------------------------------------------------------
+  
+    observeEvent(
+      input$ticker_dat,
+      {
+        output$start_date_dat_out <- renderUI({
           
-          output$start_date_dat_out <- renderUI({
-            
-            if (input$ticker_dat %in% my_tickers){
-              date <- today() - days(35)
-              if (buying_dates[input$ticker_dat] < date){
-                date <- buying_dates[input$ticker_dat] 
-              }
+          if (input$ticker_dat %in% my_tickers){
+            date <- today() - days(35)
+            if (my_buying_dates[input$ticker_dat] < date){
+              date <- my_buying_dates[input$ticker_dat] 
             }
-            else{
-              date <- today() %m-% months(6)
-            }
-            
-            airDatepickerInput(
-              inputId = "start_date_dat",
-              label = h5("How far back do you want to go?", 
-                         style = "color:#76787B;"),
-              value = date,
-              minDate = date_init, 
-              maxDate = today(),
-              width = "200px", 
-              placeholder = "",
-              multiple = F, 
-              clearButton = F)
-            
-          })
+          }
+          else{
+            date <- today() %m-% months(6)
+          }
           
-## yf data --------------------------------------------------------------
-          req(input$start_date_dat)
-          dat <- assets_value_list[[input$ticker_dat]] %>%
-            filter(date >= input$start_date_dat) %>%
-            select(-c(n_shares, value))
+          airDatepickerInput(
+            inputId = "start_date_dat",
+            label = h5("How far back do you want to go?", 
+                       style = "color:#76787B;"),
+            value = date,
+            minDate = date_init, 
+            maxDate = today(),
+            width = "200px", 
+            placeholder = "",
+            multiple = F, 
+            clearButton = F)
           
-## returns --------------------------------------------------------------
-          ret_dat <- dat %>%
-            compute_daily_returns() %>%
-            compute_cumulative_returns(all = F) %>%
-            select(c(ticker, 
-                     date, 
-                     ret,
-                     cr)) %>%
-            rename(`daily returns` = ret, 
-                   `cumulative returns` = cr)
-          
-## indicators --------------------------------------------------------------      
-          indicators_dat <- dat %>% 
-            add_moving_avg(window = 20) %>%
-            add_moving_avg(window = 50) %>%
-            add_moving_avg(window = 100) %>%
-            add_macd() %>%
-            add_rsi() %>%
-            select(c(ticker, 
-                     date,
-                     close, 
-                     MA20:RSI)) 
-          
-## data tables --------------------------------------------------------------
-          output$data <- renderDataTable( { dat %>% arrange(desc(date)) }, 
-                                          options = list(pageLength = 10,
-                                                         lengthMenu = c(10, 25, 50, 100)) )
-          
-          output$ret_data <- renderDataTable( { ret_dat %>% arrange(desc(date)) }, 
-                                              options = list(pageLength = 10,
-                                                             lengthMenu = c(10, 25, 50, 100)) )
-          
-          output$indicators_data <- renderDataTable( { indicators_dat %>% arrange(desc(date)) }, 
-                                                     options = list(pageLength = 10,
-                                                                    lengthMenu = c(10, 25, 50, 100)) )
-          
-## download -------------------------------------------------------------- 
-          output$download <- downloadHandler(
-            filename <- function() {
-              paste0(input$ticker_dat,
-                     "_", 
-                     input$start_date_dat, 
-                     "_", 
-                     today(), 
-                     ".xlsx")
-            },
-            content <- function(file) {
-              write_xlsx(x = list("Yahoo Finance Data" = dat, 
-                                  "Returns" = ret_dat, 
-                                  "Financial Indicators" = indicators_dat), 
-                         path = file)
-            }
-          )
-          
-          
-        }
-      )
+        })
+      }
+    )
+  
+    observeEvent(
       
+      c(input$ticker_dat, 
+        input$start_date_dat),
+      {
+        
+        req(input$start_date_dat)
+        req(input$ticker_dat)
+        
+## yf data --------------------------------------------------------------
+        dat <- assets_value_list[[input$ticker_dat]] %>%
+          filter(date >= input$start_date_dat) %>%
+          select(-c(n_shares, value))
+        
+## returns --------------------------------------------------------------
+        ret_dat <- dat %>%
+          compute_daily_returns() %>%
+          compute_cumulative_returns(all = F) %>%
+          select(c(ticker, 
+                   date, 
+                   ret,
+                   cr)) %>%
+          rename(`daily returns` = ret, 
+                 `cumulative returns` = cr)
+        
+## indicators --------------------------------------------------------------      
+        indicators_dat <- dat %>% 
+          add_moving_avg(window = 20) %>%
+          add_moving_avg(window = 50) %>%
+          add_moving_avg(window = 100) %>%
+          add_macd() %>%
+          add_rsi() %>%
+          select(c(ticker, 
+                   date,
+                   close, 
+                   MA20:RSI)) 
+        
+## data tables --------------------------------------------------------------
+        output$data <- renderDataTable( { dat %>% arrange(desc(date)) }, 
+                                        options = list(pageLength = 10,
+                                                       lengthMenu = c(10, 25, 50, 100)) )
+        
+        output$ret_data <- renderDataTable( { ret_dat %>% arrange(desc(date)) }, 
+                                            options = list(pageLength = 10,
+                                                           lengthMenu = c(10, 25, 50, 100)) )
+        
+        output$indicators_data <- renderDataTable( { indicators_dat %>% arrange(desc(date)) }, 
+                                                   options = list(pageLength = 10,
+                                                                  lengthMenu = c(10, 25, 50, 100)) )
+        
+## download -------------------------------------------------------------- 
+        output$download <- downloadHandler(
+          filename <- function() {
+            paste0(input$ticker_dat,
+                   "_", 
+                   input$start_date_dat, 
+                   "_", 
+                   today(), 
+                   ".xlsx")
+          },
+          content <- function(file) {
+            write_xlsx(x = list("Yahoo Finance Data" = dat, 
+                                "Returns" = ret_dat, 
+                                "Financial Indicators" = indicators_dat), 
+                       path = file)
+          }
+        )
+        
+      }
+      
+    )
+        
 # stock recommender --------------------------------------------------------------
       
       observeEvent(
-        c(# number of shares 
-          input$`num_shares_BTC-EUR`,
-          input$`num_shares_ETH-EUR`,
-          input$`num_shares_MATIC-EUR`,
-          input$`num_shares_MANA-EUR`,
-          input$`num_shares_1QZ.F`, 
-          input$`num_shares_AMZ.F`, 
-          input$`num_shares_AI.PA`, 
-          # buying dates
-          input$`buying_date_BTC-EUR`,
-          input$`buying_date_ETH-EUR`,
-          input$`buying_date_MATIC-EUR`,
-          input$`buying_date_MANA-EUR`,
-          input$`buying_date_1QZ.F`, 
-          input$`buying_date_AMZ.F`, 
-          input$`buying_date_AI.PA`,
-          #
-          input$indicator, 
+        c(input$indicator, 
           input$recommendation_start_date, 
           input$action), 
+        
         {
           
-## inputs --------------------------------------------------------------
-          
-          num_shares <- c(input$`num_shares_BTC-EUR`,
-                          input$`num_shares_ETH-EUR`,
-                          input$`num_shares_MATIC-EUR`,
-                          input$`num_shares_MANA-EUR`,
-                          input$`num_shares_1QZ.F`, 
-                          input$`num_shares_AMZ.F`, 
-                          input$`num_shares_AI.PA`)
-          names(num_shares) <- my_tickers
-          
-          buying_dates <- c(input$`buying_date_BTC-EUR`,
-                            input$`buying_date_ETH-EUR`,
-                            input$`buying_date_MATIC-EUR`,
-                            input$`buying_date_MANA-EUR`, 
-                            input$`buying_date_1QZ.F`, 
-                            input$`buying_date_AMZ.F`,
-                            input$`buying_date_AI.PA`)
-          names(buying_dates) <- my_tickers
+          req(input$indicator)
+          req(input$recommendation_start_date)
+          req(input$action)
           
 ## compute recommendations --------------------------------------------------------------
           if (length(input$indicator) == 2){
@@ -477,8 +400,9 @@ server <- function(input, output, session) {
                                               action = input$action,       
                                               start_date = input$recommendation_start_date, 
                                               criterion = criterion, 
-                                              num_shares = num_shares, 
-                                              buying_dates = buying_dates) %>% select(-date)
+                                              num_shares = my_num_shares, 
+                                              buying_dates = my_buying_dates) %>% 
+            select(-date)
           recommended_tickers <- recommendation$ticker 
           
 ## recommended stocks table --------------------------------------------------------------
