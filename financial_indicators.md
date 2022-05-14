@@ -1,4 +1,4 @@
-# Financial Indicators
+# [Financial Indicators](https://www.investopedia.com/top-7-technical-analysis-tools-4773275)
 
 ## Momentum Indicators
 
@@ -25,3 +25,7 @@ $$
 When OBV is rising, it shows that buyers are willing to step in and push the price higher. When OBV is falling, the selling volume is outpacing buying volume, which indicates lower prices. In this way, it acts like a trend confirmation tool. If price and OBV are rising, that helps indicate a continuation of the trend.
 
 Traders who use OBV also watch for divergence. This occurs when the indicator and price are going in different directions. If the price is rising but OBV is falling, that could indicate that the trend is not backed by strong buyers and could soon reverse.
+
+## Dataviz sources
+
+Financial plots with [plotly](https://plotly.com/r/financial-charts/)

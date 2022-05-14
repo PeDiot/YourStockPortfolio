@@ -724,6 +724,12 @@ get_rsi_signals <- function(
   
 }
 
+add_obv <- function(fin_data){
+  "Add on-balance-volume indicator."
+  fin_data %>%
+    mutate(OBV = OBV(price = close, volume = volume))
+}
+
 
 # Data Viz -------------------------------------------------------
 
