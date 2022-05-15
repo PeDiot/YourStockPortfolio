@@ -268,6 +268,20 @@ ui <- fluidPage(
                                          target = "_blank",
                                          "here"), 
                                        ".")),
+                            tabPanel("OBV",
+                                     br(), 
+                                     br(), 
+                                     div(plotlyOutput("obv_plot", 
+                                                      height = 640, 
+                                                      width = 800), 
+                                         align = "center"),
+                                     hr(), 
+                                     p(icon(name = "book"), 
+                                       "  More information on the On-Balance Volume (OBV) indicator can be found ", 
+                                       a(href = "https://www.investopedia.com/terms/o/onbalancevolume.asp",
+                                         target = "_blank",
+                                         "here"), 
+                                       ".")),
                             
                           )
                         )

@@ -264,6 +264,14 @@ server <- function(input, output, session) {
           rsi_chart(ticker = input$ticker_fin_analysis) 
       })
       
+## On-Balance Volume --------------------------------------------------------------
+      output$obv_plot <- renderPlotly({
+        prices %>%
+          add_obv() %>%
+          add_price_direction() %>%
+          obv_chart(ticker = input$ticker_fin_analysis)
+      })
+      
       
     }
   )

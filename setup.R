@@ -25,6 +25,7 @@ rsi <- "#F3B0DE"
 bbands <- "#CACED2"
 pctBB <- "#5EB6B1"
 pred <- "#A48BAB"
+obv <- "#E4E39D"
 
 ## GGplot theme -------------------------------------------------------
 
@@ -731,6 +732,16 @@ add_obv <- function(fin_data){
 }
 
 
+add_price_direction <- function(fin_data){
+  "Stock direction based on opening and closing prices."
+  fin_data %>%
+    mutate(direction = if_else(
+      condition = close > open, 
+      true = "Up", 
+      false = "Down"
+    ) %>% as.factor())
+}
+
 # Data Viz -------------------------------------------------------
 
 range_selector_period <- function(
@@ -1333,6 +1344,65 @@ rsi_chart <- function(ticker, price_data){
   
 }
 
+obv_chart <- function(ticker, price_data){
+  "Build plotly chart for price, volume and OBV."
+  
+  p <- price_data %>%
+    add_obv() %>% 
+    add_price_direction() %>%
+    plot_ly() %>%
+    add_trace(x = ~date,
+              type = "candlestick",
+              open = ~open, close = ~close,
+              high = ~high, low = ~low, name = ticker, 
+              increasing = high, decreasing = low, 
+              yaxis = "y1",
+              legendgroup = "one") %>% 
+    add_trace(x = ~date, 
+              y = ~volume,
+              type = "bar", 
+              name = "Volume",
+              marker = list(color = "#AAAAAA", 
+                            line = list(color = "#AAAAAA")),
+              yaxis = "y2",
+              inherit = F) %>%
+    add_trace(x = ~date, 
+              y = ~OBV, 
+              type = "scatter",
+              mode = "lines", 
+              marker = NULL, 
+              name = "OBV", 
+              line = list(color = obv,
+                          width = 1.7), 
+              legendgroup = "three", 
+              yaxis = "y3") 
+  
+  title <- get_indicator_plot_title(ticker, 
+                                    indicator_type = "Prices, Volume & OBV")
+  
+  p %>%
+    layout(title = title,
+           xaxis = list(rangeslider = list(visible = F), 
+                        rangeselector = range_selector_period(y_pos = -0.1), 
+                        title = ""),
+           yaxis = list(domain = c(0.55, 1),
+                        fixedrange = FALSE,
+                        tickfont = list(color = evolution), 
+                        title = "€"), 
+           yaxis2 = list(domain = c(0.35, 0.5),
+                         fixedrange = FALSE, 
+                         tickfont = list(color = "#AAAAAA"), 
+                         title = "Volume"), 
+           yaxis3 = list(domain = c(0, 0.3),
+                         fixedrange = FALSE, 
+                         tickfont = list(color = obv), 
+                         title = "OBV"), 
+           legend = plotly_legend())
+    
+  
+}
+  
+
 ic_alpha <- function(alpha, acf_res){
   "Confidence interval for ACF."
   
@@ -1340,7 +1410,6 @@ ic_alpha <- function(alpha, acf_res){
   return(ic)
   
 }
-
 
 # Stock Recommender -------------------------------------------------------
 
