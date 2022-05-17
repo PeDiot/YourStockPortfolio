@@ -798,7 +798,8 @@ plotly_layout <- function(
                           rangeselector = range_selector_period(y_pos = -.1),
                           title = ""),
              yaxis = list(fixedrange = FALSE, 
-                          title = title.y),
+                          title = list(text = title.y,
+                                       font = list(color = "#76787B"))),
              legend = plotly_legend()) 
   }
   else {
@@ -807,7 +808,8 @@ plotly_layout <- function(
              xaxis = list(rangeslider = list(visible = F), 
                           title = ""),
              yaxis = list(fixedrange = FALSE, 
-                          title = title.y),
+                          title = list(text = title.y,
+                                       font = list(color = "#76787B"))),
              legend = plotly_legend(y.pos = -.1)) 
   }
   return(p_layout)
@@ -1034,7 +1036,8 @@ plot_evolution <- function(
            yaxis = list(domain = c(0.45, 1),
                         fixedrange = FALSE,
                         tickfont = list(color = evolution), 
-                        title = "€"), 
+                        title = list(text = "€",
+                                     font = list(color = "#76787B"))), 
            yaxis2 = list(domain = c(0, 0.35),
                          fixedrange = FALSE, 
                          tickfont = list(color = macd), 
@@ -1204,7 +1207,8 @@ bbands_chart <- function(bbands_dat, ticker){
            yaxis = list(domain = c(.40, 1),
                         fixedrange = FALSE,
                         tickfont = list(color = evolution), 
-                        title = "€"),
+                        title = list(text = "€",
+                                     font = list(color = "#76787B"))),
            yaxis2 = list(domain = c(0, .30),
                          fixedrange = FALSE,
                          tickfont = list(color = pctBB), 
@@ -1268,11 +1272,13 @@ macd_chart <- function(ticker, price_data){
            yaxis = list(domain = c(0.45, 1),
                         fixedrange = FALSE,
                         tickfont = list(color = evolution), 
-                        title = "€"), 
+                        title = list(text = "€",
+                             font = list(color = "#76787B"))), 
            yaxis2 = list(domain = c(0, 0.35),
                          fixedrange = FALSE, 
                          tickfont = list(color = macd), 
-                         title = "%"), 
+                         title = list(text = "%",
+                              font = list(color = "#76787B"))), 
            legend = plotly_legend())
   
   return(p)
@@ -1336,7 +1342,8 @@ rsi_chart <- function(ticker, price_data){
            yaxis = list(domain = c(0.45, 1),
                         fixedrange = FALSE,
                         tickfont = list(color = evolution), 
-                        title = "€"), 
+                        title = list(text = "€",
+                                     font = list(color = "#76787B"))), 
            yaxis2 = list(domain = c(0, 0.35),
                          fixedrange = FALSE, 
                          tickfont = list(color = rsi), 
@@ -1391,15 +1398,18 @@ obv_chart <- function(ticker, price_data){
            yaxis = list(domain = c(0.55, 1),
                         fixedrange = FALSE,
                         tickfont = list(color = evolution), 
-                        title = "€"), 
+                        title = list(text = "€",
+                                     font = list(color = "#76787B"))), 
            yaxis2 = list(domain = c(0.35, 0.5),
                          fixedrange = FALSE, 
                          tickfont = list(color = "#AAAAAA"), 
-                         title = "Volume"), 
+                         title = list(text = "Volume",
+                                      font = list(color = "#76787B"))), 
            yaxis3 = list(domain = c(0, 0.3),
                          fixedrange = FALSE, 
                          tickfont = list(color = obv), 
-                         title = "OBV"), 
+                         title = list(text = "OBV",
+                                      font = list(color = "#76787B"))), 
            legend = plotly_legend())
     
   
