@@ -106,7 +106,11 @@ ui <- fluidPage(
                           h5(strong("Amazon")), 
                           asset_inputs(asset = "Amazon", 
                                        val = 0.00790615, 
-                                       buying_date = "2022-04-08")
+                                       buying_date = "2022-04-08"), 
+                          h5(strong("Meta Platforms")), 
+                          asset_inputs(asset = "Meta Platforms", 
+                                       val = 0.20416538, 
+                                       buying_date = "2022-05-17")
                         ), 
                         
                         mainPanel(

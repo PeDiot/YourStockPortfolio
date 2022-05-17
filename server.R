@@ -30,14 +30,16 @@ server <- function(input, output, session) {
           input$`num_shares_MATIC-EUR`,
           input$`num_shares_MANA-EUR`,
           input$`num_shares_1QZ.F`, 
-          input$`num_shares_AMZ.F`, 
+          input$`num_shares_AMZ.F`,
+          input$`num_shares_FB2A.F`,
           # buying dates
           input$`buying_date_BTC-EUR`,
           input$`buying_date_ETH-EUR`,
           input$`buying_date_MATIC-EUR`,
           input$`buying_date_MANA-EUR`,
           input$`buying_date_1QZ.F`, 
-          input$`buying_date_AMZ.F`),
+          input$`buying_date_AMZ.F`, 
+          input$`buying_date_FB2A.F`),
         {
           
           req(c(input$`num_shares_BTC-EUR`,
@@ -45,20 +47,23 @@ server <- function(input, output, session) {
                 input$`num_shares_MATIC-EUR`,
                 input$`num_shares_MANA-EUR`,
                 input$`num_shares_1QZ.F`, 
-                input$`num_shares_AMZ.F`))
+                input$`num_shares_AMZ.F`, 
+                input$`num_shares_FB2A.F`))
           req(c(input$`buying_date_BTC-EUR`,
                 input$`buying_date_ETH-EUR`,
                 input$`buying_date_MATIC-EUR`,
                 input$`buying_date_MANA-EUR`, 
                 input$`buying_date_1QZ.F`, 
-                input$`buying_date_AMZ.F`))
+                input$`buying_date_AMZ.F`,
+                input$`buying_date_FB2A.F`))
           
           num_shares <- c(input$`num_shares_BTC-EUR`,
                           input$`num_shares_ETH-EUR`,
                           input$`num_shares_MATIC-EUR`,
                           input$`num_shares_MANA-EUR`,
                           input$`num_shares_1QZ.F`, 
-                          input$`num_shares_AMZ.F`)
+                          input$`num_shares_AMZ.F`,
+                          input$`num_shares_FB2A.F`)
           names(num_shares) <- my_tickers
           
           buying_dates <- c(input$`buying_date_BTC-EUR`,
@@ -66,7 +71,8 @@ server <- function(input, output, session) {
                             input$`buying_date_MATIC-EUR`,
                             input$`buying_date_MANA-EUR`, 
                             input$`buying_date_1QZ.F`, 
-                            input$`buying_date_AMZ.F`)
+                            input$`buying_date_AMZ.F`, 
+                            input$`buying_date_FB2A.F`)
           names(buying_dates) <- my_tickers
           
           assets_value_list_wid <- compute_assets_value(data = yf_data, 
