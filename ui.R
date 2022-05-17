@@ -110,7 +110,8 @@ ui <- fluidPage(
                           h5(strong("Meta Platforms")), 
                           asset_inputs(asset = "Meta Platforms", 
                                        val = 0.20416538, 
-                                       buying_date = "2022-05-17")
+                                       buying_date = "2022-05-17"),
+                          style = "position: fixed; height: 80vh; overflow-y: auto; width: 360px;",
                         ), 
                         
                         mainPanel(
