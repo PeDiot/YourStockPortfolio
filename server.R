@@ -2,13 +2,13 @@ server <- function(input, output, session) {
   
 
 # User Authentification ---------------------------------------------------
-#  res_auth <- secure_server(
-#    check_credentials = check_credentials(credentials)
-#  )
+res_auth <- secure_server(
+  check_credentials = check_credentials(credentials)
+)
   
-#  output$auth_output <- renderPrint({
-#    reactiveValuesToList(res_auth)
-#  })
+output$auth_output <- renderPrint({
+  reactiveValuesToList(res_auth)
+})
   
 # home page --------------------------------------------------------------
   
@@ -218,7 +218,8 @@ server <- function(input, output, session) {
         plot_evolution(price_dat = prices %>%
                          dplyr::select(c(date, close)) %>%
                          rename(value = close), 
-                       cum_ret_dat = asset_cumret)
+                       cum_ret_dat = asset_cumret, 
+                       ticker = input$ticker_fin_analysis)
       })
       
 ## asset last price --------------------------------------------------------------

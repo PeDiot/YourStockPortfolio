@@ -940,10 +940,17 @@ plot_price_evolution <- function(
   plotly_obj, 
   title, 
   legend_group, 
-  trace_name = "Value (€)", 
+  ticker = NULL, 
   yaxis = NULL
 ){
   "Plot price evolution."
+  
+  if (is.null(ticker)){
+    trace_name <- "Value (€)"
+  }
+  else{
+    trace_name <- ticker
+  }
   
   if (is.null(yaxis)){
     p <- plotly_obj %>%
@@ -979,7 +986,8 @@ plot_price_evolution <- function(
 plot_evolution <- function(
   price_dat,
   cum_ret_dat = NULL, 
-  daily_ret_dat = NULL
+  daily_ret_dat = NULL, 
+  ticker = NULL
 ){
   "Combine price evolution and cumulative/daily returns plots."
   
@@ -998,7 +1006,8 @@ plot_evolution <- function(
     
     p <- plot_ly(data) %>%
       plot_price_evolution(title = "", 
-                           legend_group = "one") %>%
+                           legend_group = "one", 
+                           ticker = ticker) %>%
       plot_cumulative_returns(trace_col = trace_col, 
                               title = "", 
                               yaxis = "y2", 
@@ -1020,7 +1029,8 @@ plot_evolution <- function(
     
     p <- plot_ly(data) %>%
       plot_price_evolution(title = "", 
-                           legend_group = "one") %>%
+                           legend_group = "one",
+                           ticker = ticker) %>%
       plot_daily_returns(trace_col = trace_col, 
                          title = "", 
                          yaxis = "y2", 
@@ -1103,7 +1113,7 @@ candlestick_chart <- function(ticker, price_data){
               high = ~high, 
               low = ~low, 
               close = ~close,
-              name = "Close", 
+              name = ticker, 
               increasing = list(line = list(color = high,
                                             width = 1.5)), 
               decreasing = list(line = list(color = low,
@@ -1136,11 +1146,9 @@ candlestick_chart <- function(ticker, price_data){
                           dash = "dot", 
                           width = 1.5), 
               hoverinfo = "none")
-  
-  title <- get_indicator_plot_title(ticker, 
-                                    indicator_type = "Candlestick & Moving Averages")
+
   p <- p %>%
-    plotly_layout(title = title, title.y = "€")
+    plotly_layout(title = "", title.y = "€")
   
   return(p)
   
@@ -1155,7 +1163,7 @@ bbands_chart <- function(bbands_dat, ticker){
               marker = NULL,
               x = ~date,
               y = ~close,
-              name = "Close", 
+              name = ticker, 
               line = list(color = evolution,
                           width = 1.2), 
               yaxis = "y1") %>%
@@ -1197,10 +1205,8 @@ bbands_chart <- function(bbands_dat, ticker){
                           width = 1), 
               yaxis = "y2")
   
-  title <- get_indicator_plot_title(ticker, 
-                                    indicator_type = "Bollinger Bands")
   p %>%
-    layout(title = title,
+    layout(title = "",
            xaxis = list(rangeslider = list(visible = F), 
                         rangeselector = range_selector_period(y_pos = -0.1), 
                         title = ""),
@@ -1230,7 +1236,8 @@ macd_chart <- function(ticker, price_data){
     plot_ly() %>%
     plot_price_evolution(title = "", 
                          legend_group = "one", 
-                         yaxis = "y1") %>%
+                         yaxis = "y1", 
+                         ticker = ticker) %>%
     add_trace(type = "scatter", 
               mode = "lines",
               marker = NULL,
@@ -1262,10 +1269,8 @@ macd_chart <- function(ticker, price_data){
               legend_group = "two", 
               yaxis = "y2")
   
-  title <- get_indicator_plot_title(ticker, 
-                                    indicator_type = "Prices & Moving Average Convergence Divergence")
-  p <- p %>%
-    layout(title = title,
+ p <- p %>%
+    layout(title = "",
            xaxis = list(rangeslider = list(visible = F), 
                         rangeselector = range_selector_period(y_pos = -0.1), 
                         title = ""),
@@ -1296,7 +1301,8 @@ rsi_chart <- function(ticker, price_data){
     plot_ly() %>%
     plot_price_evolution(title = "", 
                          legend_group = "one", 
-                         yaxis = "y1") %>%
+                         yaxis = "y1", 
+                         ticker = ticker) %>%
     add_trace(type = "scatter", 
               mode = "lines",
               marker = NULL,
@@ -1332,10 +1338,8 @@ rsi_chart <- function(ticker, price_data){
               legend_group = "two",  
               yaxis = "y2")
   
-  title <- get_indicator_plot_title(ticker, 
-                                    indicator_type = "Prices & Relative Strength Index")
   p <- p %>%
-    layout(title = title,
+    layout(title = "",
            xaxis = list(rangeslider = list(visible = F), 
                         rangeselector = range_selector_period(y_pos = -0.1), 
                         title = ""),
@@ -1387,11 +1391,8 @@ obv_chart <- function(ticker, price_data){
               legendgroup = "three", 
               yaxis = "y3") 
   
-  title <- get_indicator_plot_title(ticker, 
-                                    indicator_type = "Prices, Volume & OBV")
-  
   p %>%
-    layout(title = title,
+    layout(title = "",
            xaxis = list(rangeslider = list(visible = F), 
                         rangeselector = range_selector_period(y_pos = -0.1), 
                         title = ""),
