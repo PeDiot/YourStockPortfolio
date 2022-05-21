@@ -76,7 +76,7 @@ output$auth_output <- renderPrint({
           names(buying_dates) <- my_tickers
           
           assets_value_list_wid <- compute_assets_value(data = yf_data, 
-                                                    num_shares = num_shares) 
+                                                        num_shares = num_shares) 
           
           my_assets_value <- my_tickers %>%
             lapply(FUN = query_assets_since_buying_date, 
@@ -93,15 +93,16 @@ output$auth_output <- renderPrint({
             
           })
           
-### portfolio returns --------------------------------------------------------------
-          date_selection <- buying_dates[buying_dates != min(buying_dates)]
+## portfolio returns --------------------------------------------------------------
+          date_selection <- buying_dates[buying_dates != min(buying_dates)] %>%
+            as.Date()
           port_daily_ret <- port_value %>%
             compute_daily_returns(asset_dat = NULL) %>%
             filter( !(date %in% date_selection) )
           port_cumret <- port_daily_ret %>%
             compute_cumulative_returns()
           
-### data viz --------------------------------------------------------------
+## data viz --------------------------------------------------------------
           output$portfolio_evolution <- renderPlotly({
             plot_evolution(price_dat = port_value, 
                            cum_ret_dat = port_cumret) 
