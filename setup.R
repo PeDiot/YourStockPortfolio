@@ -151,7 +151,8 @@ my_tickers <- c("BTC-EUR",
                 "MANA-EUR", 
                 "1QZ.F", 
                 "AMZ.F", 
-                "FB2A.F")
+                "FB2A.F", 
+                "NVD.F")
 
 my_tickers_ix <- lapply(1:nrow(symbols), 
                         function(ix){
@@ -169,7 +170,8 @@ my_buying_dates <- c("2022-03-02",
                      "2022-03-02", 
                      "2022-03-29",
                      "2022-04-08", 
-                     "2022-05-17")
+                     "2022-05-17", 
+                     "2022-05-30")
 names(my_buying_dates) <- my_tickers
 
 my_num_shares <- c(0.00037241, 
@@ -178,7 +180,8 @@ my_num_shares <- c(0.00037241,
                    10.8270573, 
                    0.10934065, 
                    0.00790615, 
-                   0.20416538)
+                   0.20416538, 
+                   0.22274457)
 names(my_num_shares) <- my_tickers
 
 # Utils -------------------------------------------------------
@@ -336,6 +339,19 @@ cumret_to_percent <- function(cr){
   
 }
 
+format_table_numbers <- function(tab){
+  "Convert numbers into more friendly format."
+  
+  tab %>% 
+    mutate_if(is.numeric, 
+              round, 
+              digits = 2) %>% 
+    mutate_if(is.numeric, 
+              format, 
+              big.mark = ",",
+              scientific = F) 
+}
+
 # Value -------------------------------------------------------
 
 compute_assets_value <- function(data, num_shares){
@@ -394,6 +410,20 @@ get_current_price <- function(data){
            scientific = F)
 }
 
+calculate_assets_weights <- function(assets_value){
+  "Calculate each asset's weights in the portfolio."
+  
+  d <- assets_value %>%
+    filter(date == max(date)) %>%
+    mutate(ticker = as.factor(ticker)) %>%
+    mutate(asset = lapply(ticker, get_company_name))
+  tot_val <- sum(d$value)
+  d <- d %>%
+    mutate(wts = value / tot_val) %>% 
+    mutate(pct = 100*wts)
+  
+  return(d)
+}
 
 # Assets performance -------------------------------------------------------
 
@@ -445,14 +475,8 @@ compute_daily_returns <- function(asset_dat, portfolio_dat = NULL){
   
 }
 
-compute_weighted_returns <- function(ret_data, num_shares){
+compute_weighted_returns <- function(ret_data, wts_dat){
   "Calculate the weighted average of our asset returns."
-  
-  n_shares <- sum(num_shares)
-  wts_dat <- data.frame(ticker = names(num_shares), 
-                        num_shares = num_shares) %>%
-    mutate(wts = num_shares / n_shares)
-  
   ret_data <- left_join(x = ret_data,
                         y = wts_dat, 
                         by = "ticker")
@@ -462,7 +486,7 @@ compute_weighted_returns <- function(ret_data, num_shares){
   
 }
 
-compute_cumulative_returns <- function(ret_data, all = T){
+compute_cumulative_returns <- function(ret_data, all = T, weighted = F){
   "Calculate the cumulative returns for the entire portfolio or a specific ticker. "
   
   if (all == T){
@@ -470,9 +494,16 @@ compute_cumulative_returns <- function(ret_data, all = T){
       mutate(cr = cumprod(1 + ret)) 
   }
   else{
-    cum_returns <- ret_data %>%
-      group_by(ticker) %>%
-      mutate(cr = cumprod(1 + ret)) 
+    if (weighted == F){
+      cum_returns <- ret_data %>%
+        group_by(ticker) %>%
+        mutate(cr = cumprod(1 + ret)) 
+    }
+    else{
+      cum_returns <- ret_data %>%
+        group_by(ticker) %>%
+        mutate(cr = cumprod(1 + wt_return)) 
+    }
   }
   
   return(cum_returns)
@@ -496,7 +527,7 @@ get_best_asset <- function(assets_cumret){
   d <- assets_cumret %>% 
     filter(date == max(date)) %>% 
     ungroup() %>% 
-    filter(cr == max(cr))
+    filter(cr == max(cr, na.rm = T))
   l <- list(asset = get_company_name(d$ticker), 
             pct_cr = cumret_to_percent(d$cr))
   return(l) 
@@ -509,7 +540,7 @@ get_worst_asset <- function(assets_cumret){
   d <- assets_cumret %>% 
     filter(date == max(date)) %>% 
     ungroup() %>% 
-    filter(cr == min(cr))
+    filter(cr == min(cr, na.rm = T))
   l <- list(asset = get_company_name(d$ticker), 
             pct_cr = cumret_to_percent(d$cr))
   return(l) 
@@ -1056,24 +1087,18 @@ plot_evolution <- function(
   
 }
 
-portfolio_composition <- function(assets_value){
+plot_portfolio_composition <- function(assets_weights){
   "Return a pie chart with each asset's value."
   
-  d <- assets_value %>%
-    filter(date == max(date)) %>%
-    mutate(ticker = as.factor(ticker)) %>%
-    mutate(asset = lapply(ticker, get_company_name))
-  tot_val <- sum(d$value)
-  d <- d %>%
-    mutate(pct = 100 * value / tot_val)
-  
   gradient <- colorRampPalette(c("#C9E4EA", "#567FA4"))
-  numeric_cut <- cut(d$pct, breaks = nrow(d)) %>%
+  numeric_cut <- cut(assets_weights$pct, 
+                     breaks = nrow(assets_weights)) %>%
     as.numeric()
-  d <- d %>%
-    mutate( colors = gradient(nrow(d))[numeric_cut] )
+  assets_weights <- assets_weights %>%
+    mutate( colors = gradient(nrow(assets_weights))[numeric_cut] )
   
-  fig <- d %>%
+  fig <- assets_weights %>%
+    mutate(asset = lapply(ticker, get_company_name)) %>% 
     plot_ly(labels = ~ticker, 
             values = ~value, 
             type = "pie", 
