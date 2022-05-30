@@ -111,6 +111,10 @@ ui <- fluidPage(
                           asset_inputs(asset = "Meta Platforms", 
                                        val = 0.20416538, 
                                        buying_date = "2022-05-17"),
+                          h5(strong("Nvidia")), 
+                          asset_inputs(asset = "NVIDIA", 
+                                       val = 0.22274457, 
+                                       buying_date = "2022-05-30"),
                           style = "position: fixed; height: 80vh; overflow-y: auto; width: 360px;",
                         ), 
                         
@@ -153,10 +157,19 @@ ui <- fluidPage(
                                               column(width = 1), 
                                               infoBoxOutput("worst_asset_cumret"))), 
 
+## correlations ---------------------------------------------------------
+
+                              tabPanel("Correlations", 
+                                       br(), 
+                                       h4(strong("Correlations between your assets' daily returns"), 
+                                          align = "center", 
+                                          style = "color:#76787B;")),
+
 ## portfolio data ---------------------------------------------------------
                               tabPanel("Table", 
                                        br(),
-                                       dataTableOutput(outputId = "port_data"))
+                                       div(dataTableOutput(outputId = "port_data"), 
+                                           align = "center"))
 
                           )
                           
@@ -364,13 +377,16 @@ ui <- fluidPage(
                    tabsetPanel(
                      tabPanel("Yahoo Finance", 
                               br(),
-                              dataTableOutput(outputId = "data")), 
+                              div(dataTableOutput(outputId = "data"), 
+                                  align = "center")), 
                      tabPanel("Returns", 
                               br(),
-                              dataTableOutput(outputId = "ret_data")), 
+                              div(dataTableOutput(outputId = "ret_data"), 
+                                  align = "center")), 
                      tabPanel("Indicators", 
                               br(),
-                              dataTableOutput(outputId = "indicators_data"))
+                              div(dataTableOutput(outputId = "indicators_data"), 
+                                  align = "center"))
                    ), 
                   
                  )
@@ -443,7 +459,8 @@ ui <- fluidPage(
                     br(),
                     uiOutput(outputId = "recommendation_tab_title"),
                     br(),  
-                    dataTableOutput(outputId = "recommendation_data"), 
+                    div(dataTableOutput(outputId = "recommendation_data"), 
+                        align = "center"), 
                     br(),
                     hr(),
                     br(),

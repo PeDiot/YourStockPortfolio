@@ -32,6 +32,7 @@ output$auth_output <- renderPrint({
           input$`num_shares_1QZ.F`, 
           input$`num_shares_AMZ.F`,
           input$`num_shares_FB2A.F`,
+          input$`num_shares_NVD.F`,
           # buying dates
           input$`buying_date_BTC-EUR`,
           input$`buying_date_ETH-EUR`,
@@ -39,7 +40,8 @@ output$auth_output <- renderPrint({
           input$`buying_date_MANA-EUR`,
           input$`buying_date_1QZ.F`, 
           input$`buying_date_AMZ.F`, 
-          input$`buying_date_FB2A.F`),
+          input$`buying_date_FB2A.F`, 
+          input$`buying_date_NVD.F`),
         {
           
           req(c(input$`num_shares_BTC-EUR`,
@@ -48,14 +50,16 @@ output$auth_output <- renderPrint({
                 input$`num_shares_MANA-EUR`,
                 input$`num_shares_1QZ.F`, 
                 input$`num_shares_AMZ.F`, 
-                input$`num_shares_FB2A.F`))
+                input$`num_shares_FB2A.F`, 
+                input$`num_shares_NVD.F`))
           req(c(input$`buying_date_BTC-EUR`,
                 input$`buying_date_ETH-EUR`,
                 input$`buying_date_MATIC-EUR`,
                 input$`buying_date_MANA-EUR`, 
                 input$`buying_date_1QZ.F`, 
                 input$`buying_date_AMZ.F`,
-                input$`buying_date_FB2A.F`))
+                input$`buying_date_FB2A.F`, 
+                input$`buying_date_NVD.F`))
           
           num_shares <- c(input$`num_shares_BTC-EUR`,
                           input$`num_shares_ETH-EUR`,
@@ -63,7 +67,8 @@ output$auth_output <- renderPrint({
                           input$`num_shares_MANA-EUR`,
                           input$`num_shares_1QZ.F`, 
                           input$`num_shares_AMZ.F`,
-                          input$`num_shares_FB2A.F`)
+                          input$`num_shares_FB2A.F`, 
+                          input$`num_shares_NVD.F`)
           names(num_shares) <- my_tickers
           
           buying_dates <- c(input$`buying_date_BTC-EUR`,
@@ -72,7 +77,8 @@ output$auth_output <- renderPrint({
                             input$`buying_date_MANA-EUR`, 
                             input$`buying_date_1QZ.F`, 
                             input$`buying_date_AMZ.F`, 
-                            input$`buying_date_FB2A.F`)
+                            input$`buying_date_FB2A.F`, 
+                            input$`buying_date_NVD.F`)
           names(buying_dates) <- my_tickers
           
           assets_value_list_wid <- compute_assets_value(data = yf_data, 
@@ -94,40 +100,56 @@ output$auth_output <- renderPrint({
           })
           
 ## portfolio returns --------------------------------------------------------------
-          date_selection <- buying_dates[buying_dates != min(buying_dates)] %>%
-            as.Date()
-          port_daily_ret <- port_value %>%
-            compute_daily_returns(asset_dat = NULL) %>%
-            filter( !(date %in% date_selection) )
-          port_cumret <- port_daily_ret %>%
+          my_assets_weights <- my_assets_value %>%
+            bind_rows() %>%
+            calculate_assets_weights() %>% 
+            select(c(ticker, value, wts, pct))
+          
+          my_assets_returns <- lapply(
+            X = assets_value_list_wid[my_tickers], 
+            FUN = function(d){
+              buying_date <- buying_dates[d$ticker]
+              d %>%
+                filter(date >= buying_date) %>% 
+                compute_daily_returns() 
+            }
+          ) %>% bind_rows() 
+          
+          weighted_returns <- compute_weighted_returns(ret_data = my_assets_returns, 
+                                                       wts_dat = my_assets_weights)
+          
+          port_weighted_ret <- weighted_returns %>%
+            group_by(date) %>%
+            summarise(ret = sum(wt_return))
+          
+          port_cumulative_ret <- port_weighted_ret %>%
             compute_cumulative_returns()
           
 ## data viz --------------------------------------------------------------
           output$portfolio_evolution <- renderPlotly({
             plot_evolution(price_dat = port_value, 
-                           cum_ret_dat = port_cumret) 
+                           cum_ret_dat = port_cumulative_ret) 
           })
           
           max_date <- max(buying_dates)
           output$port_last_cumret <- renderInfoBox({
-            last_cumret <- get_current_cumret(port_cumret)
+            last_cumret <- get_current_cumret(port_cumulative_ret)
             infoBox_last_cumret(last_cumret)
           })
           
 ## portfolio composition --------------------------------------------------------------
           
 ### best and worst assets --------------------------------------------------------------
-          assets_cumret <- my_assets_value %>%
-            compute_daily_returns() %>%
-            compute_cumulative_returns(all = F)
+          assets_cumret <- weighted_returns %>%
+            compute_cumulative_returns(all = F, weighted = T)
           
           best_asset <- get_best_asset(assets_cumret) 
           worst_asset <- get_worst_asset(assets_cumret) 
           
 ### data viz --------------------------------------------------------------
           output$portfolio_composition <- renderPlotly({
-            my_assets_value %>%
-              portfolio_composition()
+            my_assets_weights %>%
+              plot_portfolio_composition()
           })
           
           output$best_asset_cumret <- renderInfoBox({
@@ -140,11 +162,12 @@ output$auth_output <- renderPrint({
           
 ## portfolio data table --------------------------------------------------------------
           port_dat <- merge(x = port_value, 
-                            y = port_cumret, 
+                            y = port_cumulative_ret, 
                             by = "date") %>%
+            format_table_numbers() %>% 
             arrange(desc(date)) %>%
-            rename(`daily returns` = ret, 
-                   `cumulative returns` = cr)
+            rename(`daily weighted returns` = ret, 
+                   `cumulative weighted returns` = cr)
           output$port_data <- renderDataTable({port_dat}, 
                                               options = list(pageLength = 10,
                                                              lengthMenu = c(10, 25, 50, 100)) )
@@ -331,7 +354,7 @@ output$auth_output <- renderPrint({
 ## yf data --------------------------------------------------------------
         dat <- assets_value_list[[input$ticker_dat]] %>%
           filter(date >= input$start_date_dat) %>%
-          select(-c(n_shares, value))
+          select(-c(n_shares, value)) 
         
 ## returns --------------------------------------------------------------
         ret_dat <- dat %>%
@@ -341,6 +364,7 @@ output$auth_output <- renderPrint({
                    date, 
                    ret,
                    cr)) %>%
+          format_table_numbers() %>% 
           rename(`daily returns` = ret, 
                  `cumulative returns` = cr)
         
@@ -354,20 +378,34 @@ output$auth_output <- renderPrint({
           select(c(ticker, 
                    date,
                    close, 
-                   MA20:RSI)) 
+                   MA20:RSI)) %>%
+          format_table_numbers() 
         
 ## data tables --------------------------------------------------------------
-        output$data <- renderDataTable( { dat %>% arrange(desc(date)) }, 
-                                        options = list(pageLength = 10,
-                                                       lengthMenu = c(10, 25, 50, 100)) )
+        output$data <- renderDataTable( { 
+          dat %>%
+            format_table_numbers() %>% 
+            arrange(desc(date)) 
+          }, 
+          options = list(pageLength = 10,
+                         lengthMenu = c(10, 25, 50, 100)) 
+          )
         
-        output$ret_data <- renderDataTable( { ret_dat %>% arrange(desc(date)) }, 
-                                            options = list(pageLength = 10,
-                                                           lengthMenu = c(10, 25, 50, 100)) )
+        output$ret_data <- renderDataTable( { 
+          ret_dat %>% 
+            arrange(desc(date)) 
+          }, 
+          options = list(pageLength = 10,
+                         lengthMenu = c(10, 25, 50, 100)) 
+          )
         
-        output$indicators_data <- renderDataTable( { indicators_dat %>% arrange(desc(date)) }, 
-                                                   options = list(pageLength = 10,
-                                                                  lengthMenu = c(10, 25, 50, 100)) )
+        output$indicators_data <- renderDataTable( { 
+          indicators_dat %>% 
+            arrange(desc(date)) 
+          }, 
+          options = list(pageLength = 10,
+                         lengthMenu = c(10, 25, 50, 100)) 
+          )
         
 ## download -------------------------------------------------------------- 
         output$download <- downloadHandler(
@@ -417,8 +455,7 @@ output$auth_output <- renderPrint({
                                               start_date = input$recommendation_start_date, 
                                               criterion = criterion, 
                                               num_shares = my_num_shares, 
-                                              buying_dates = my_buying_dates) %>% 
-            select(-date)
+                                              buying_dates = my_buying_dates) 
           recommended_tickers <- recommendation$ticker 
           
 ## recommended stocks table --------------------------------------------------------------
@@ -429,7 +466,9 @@ output$auth_output <- renderPrint({
                                     paste0(sym, " (", x, ")")
                                   }) %>% unlist()
             recommendation %>% 
-              mutate(ticker = new_tickers) 
+              mutate(ticker = new_tickers) %>% 
+              format_table_numbers() %>% 
+              select(-date)
           }, 
           options = list(pageLength = 5,
                          lengthMenu = c(1, 3, 5)) 
