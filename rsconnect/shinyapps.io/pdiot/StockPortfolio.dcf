@@ -5,10 +5,10 @@ account: pdiot
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 5817205
-bundleId: 5915117
+bundleId: 5960609
 url: https://pdiot.shinyapps.io/StockPortfolio/
-when: 1652795188.70518
-lastSyncTime: 1652795188.70518
+when: 1653928058.9762
+lastSyncTime: 1653928058.9762
 asMultiple: FALSE
 asStatic: FALSE
-ignoredFiles: .RData|desktop.ini|financial_indicators.html|financial_indicators.md|README.md
+ignoredFiles: .RData|correlations.R|desktop.ini|financial_indicators.md|README.md
