@@ -60,7 +60,8 @@ stock_tickers <- c("1QZ.F",
                    "SU.PA",
                    "NVD.F", 
                    "TL0.F", 
-                   "NFC.F")
+                   "NFC.F",
+                   "2PP.F")
 
 stock_names <- c("Coinbase", 
                  "LVMH",
@@ -89,7 +90,8 @@ stock_names <- c("Coinbase",
                  "Schneider Electric", 
                  "NVIDIA", 
                  "Tesla", 
-                 "Netflix")
+                 "Netflix", 
+                 "PayPal")
 names(stock_tickers) <- stock_names
 
 crypto_tickers <- c("BTC-EUR", 
