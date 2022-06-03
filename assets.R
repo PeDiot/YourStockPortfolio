@@ -61,7 +61,14 @@ stock_tickers <- c("1QZ.F",
                    "3V64.F", 
                    "WMT.F", 
                    "NKE.F", 
-                   "FOO.F") 
+                   "FOO.F", 
+                   "526.F", 
+                   "SRB.F", 
+                   "CSA.F", 
+                   "GRMN", 
+                   "2ON.F", 
+                   "2RR.F", 
+                   "WDP.F") 
 
 stock_names <- c("Coinbase", 
                  "Ubisoft", 
@@ -123,7 +130,14 @@ stock_names <- c("Coinbase",
                  "visa", 
                  "walmart", 
                  "nike", 
-                 "salesforce inc") %>% str_to_upper()
+                 "salesforce inc", 
+                 "mongodb", 
+                 "starbucks", 
+                 "accenture", 
+                 "garmin ltd", 
+                 "peloton", 
+                 "alibaba", 
+                 "THE WALT DISNEY COMPANY") %>% str_to_upper()
 
 names(stock_tickers) <- stock_names
 
@@ -235,4 +249,5 @@ my_num_shares <- c(0.00037241,
                    0.00790615, 
                    0.20416538, 
                    0.22274457)
+
 names(my_num_shares) <- my_tickers
