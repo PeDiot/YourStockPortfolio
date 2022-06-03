@@ -160,6 +160,14 @@ output$auth_output <- renderPrint({
             infoBox_asset_cumret(worst_asset, type = "worst")
           })
           
+## portfolio infos --------------------------------------------------------------
+          
+          port_info <- format_portfolio_info(tickers, buying_dates, num_shares)
+          output$port_info <- renderDataTable( { port_info },
+                                               options = list(pageLength = 10,
+                                                              lengthMenu = c(10, 25, 50, 100)) )
+          
+          
 ## portfolio data table --------------------------------------------------------------
           port_dat <- merge(x = port_value, 
                             y = port_cumulative_ret, 
@@ -168,8 +176,8 @@ output$auth_output <- renderPrint({
             arrange(desc(date)) %>%
             rename(`daily weighted returns` = ret, 
                    `cumulative weighted returns` = cr)
-          output$port_data <- renderDataTable({port_dat}, 
-                                              options = list(pageLength = 10,
+          output$port_data <- renderDataTable( {port_dat}, 
+                                               options = list(pageLength = 10,
                                                              lengthMenu = c(10, 25, 50, 100)) )
         }
       )

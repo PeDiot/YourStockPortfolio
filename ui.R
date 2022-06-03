@@ -165,8 +165,14 @@ ui <- fluidPage(
                                           align = "center", 
                                           style = "color:#76787B;")),
 
+## portfolio infos ---------------------------------------------------------
+                              tabPanel("Infos", 
+                                       br(),
+                                       div(dataTableOutput(outputId = "port_info"), 
+                                           align = "center")), 
+
 ## portfolio data ---------------------------------------------------------
-                              tabPanel("Table", 
+                              tabPanel("Data", 
                                        br(),
                                        div(dataTableOutput(outputId = "port_data"), 
                                            align = "center"))

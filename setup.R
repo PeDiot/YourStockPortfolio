@@ -199,6 +199,57 @@ format_table_numbers <- function(tab){
               scientific = F) 
 }
 
+format_portfolio_info <- function(tickers, buying_dates, num_shares){
+  assets <- lapply(X = my_tickers, get_company_name) %>% unlist()
+  
+  buying_prices <- lapply(
+    
+    X = my_tickers, 
+    
+    FUN = function(tick){
+      yf_data[[tick]] %>%
+        filter(date == my_buying_dates[tick]) %>%
+        pull(close)
+    }
+    
+  ) %>% unlist() 
+  
+  current_prices <- lapply(
+    
+    X = my_tickers, 
+    
+    FUN = function(tick){
+      yf_data[[tick]] %>%
+        filter(date == today()) %>%
+        pull(close)
+    }
+    
+  ) %>% unlist()
+  
+  val_returns <- num_shares * (current_prices - buying_prices)
+  
+  pct_returns <- 100 * calculate_total_returns(buying_prices, current_prices)
+  
+  data.frame(buying_dates = buying_dates,
+             assets = assets, 
+             num_shares = num_shares, 
+             buying_prices = buying_prices, 
+             current_prices = current_prices,
+             val_returns = val_returns, 
+             pct_returns = pct_returns) %>% 
+    format_table_numbers() %>%
+    rename(`Buying date` = buying_dates, 
+           Asset = assets, 
+           `Number of shares` = num_shares, 
+           `Buying price (€)` = buying_prices, 
+           `Current price (€)` = current_prices, 
+           `€ returns` = val_returns, 
+           `% returns` = pct_returns) %>%
+    as.data.frame(row.names = 1:nrow(.)) %>% 
+    arrange(desc(`Buying date`))
+  
+}
+
 # Value -------------------------------------------------------
 
 compute_assets_value <- function(data, num_shares){
