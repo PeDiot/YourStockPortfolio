@@ -57,7 +57,11 @@ stock_tickers <- c("1QZ.F",
                    "ALO.PA",
                    "VIV.PA",
                    "EN.PA",
-                   "RNO.PA") 
+                   "RNO.PA", 
+                   "3V64.F", 
+                   "WMT.F", 
+                   "NKE.F", 
+                   "FOO.F") 
 
 stock_names <- c("Coinbase", 
                  "Ubisoft", 
@@ -115,7 +119,11 @@ stock_names <- c("Coinbase",
                  "ALSTOM",
                  "VIVENDI SE",
                  "BOUYGUES",           
-                 "RENAULT") %>% str_to_upper()
+                 "RENAULT", 
+                 "visa", 
+                 "walmart", 
+                 "nike", 
+                 "salesforce inc") %>% str_to_upper()
 
 names(stock_tickers) <- stock_names
 
