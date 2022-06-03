@@ -187,7 +187,7 @@ output$auth_output <- renderPrint({
         output$start_date_fin_analysis_out <- renderUI({
           
           if (input$ticker_fin_analysis %in% my_tickers){
-            date <- today() - days(35)
+            date <- today() - months(3)
             if (my_buying_dates[input$ticker_fin_analysis] < date){
               date <- my_buying_dates[input$ticker_fin_analysis] 
             }
