@@ -29,69 +29,73 @@ output$auth_output <- renderPrint({
           input$`num_shares_ETH-EUR`,
           input$`num_shares_MATIC-EUR`,
           input$`num_shares_MANA-EUR`,
-          input$`num_shares_1QZ.F`, 
-          input$`num_shares_AMZ.F`,
-          input$`num_shares_FB2A.F`,
-          input$`num_shares_NVD.F`,
+          input$`num_shares_COIN`, 
+          input$`num_shares_AMZN`,
+          input$`num_shares_FB`,
+          input$`num_shares_NVDA`,
           # buying dates
           input$`buying_date_BTC-EUR`,
           input$`buying_date_ETH-EUR`,
           input$`buying_date_MATIC-EUR`,
           input$`buying_date_MANA-EUR`,
-          input$`buying_date_1QZ.F`, 
-          input$`buying_date_AMZ.F`, 
-          input$`buying_date_FB2A.F`, 
-          input$`buying_date_NVD.F`),
+          input$`buying_date_COIN`, 
+          input$`buying_date_AMZN`, 
+          input$`buying_date_FB`, 
+          input$`buying_date_NVDA`),
         {
           
           req(c(input$`num_shares_BTC-EUR`,
                 input$`num_shares_ETH-EUR`,
                 input$`num_shares_MATIC-EUR`,
                 input$`num_shares_MANA-EUR`,
-                input$`num_shares_1QZ.F`, 
-                input$`num_shares_AMZ.F`, 
-                input$`num_shares_FB2A.F`, 
-                input$`num_shares_NVD.F`))
+                input$`num_shares_COIN`, 
+                input$`num_shares_AMZN`, 
+                input$`num_shares_FB`, 
+                input$`num_shares_NVDA`))
           req(c(input$`buying_date_BTC-EUR`,
                 input$`buying_date_ETH-EUR`,
                 input$`buying_date_MATIC-EUR`,
                 input$`buying_date_MANA-EUR`, 
-                input$`buying_date_1QZ.F`, 
-                input$`buying_date_AMZ.F`,
-                input$`buying_date_FB2A.F`, 
-                input$`buying_date_NVD.F`))
+                input$`buying_date_COIN`, 
+                input$`buying_date_AMZN`,
+                input$`buying_date_FB`, 
+                input$`buying_date_NVDA`))
           
           num_shares <- c(input$`num_shares_BTC-EUR`,
                           input$`num_shares_ETH-EUR`,
                           input$`num_shares_MATIC-EUR`,
                           input$`num_shares_MANA-EUR`,
-                          input$`num_shares_1QZ.F`, 
-                          input$`num_shares_AMZ.F`,
-                          input$`num_shares_FB2A.F`, 
-                          input$`num_shares_NVD.F`)
+                          input$`num_shares_COIN`, 
+                          input$`num_shares_AMZN`,
+                          input$`num_shares_FB`, 
+                          input$`num_shares_NVDA`)
           names(num_shares) <- my_tickers
           
           buying_dates <- c(input$`buying_date_BTC-EUR`,
                             input$`buying_date_ETH-EUR`,
                             input$`buying_date_MATIC-EUR`,
                             input$`buying_date_MANA-EUR`, 
-                            input$`buying_date_1QZ.F`, 
-                            input$`buying_date_AMZ.F`, 
-                            input$`buying_date_FB2A.F`, 
-                            input$`buying_date_NVD.F`)
+                            input$`buying_date_COIN`, 
+                            input$`buying_date_AMZN`, 
+                            input$`buying_date_FB`, 
+                            input$`buying_date_NVDA`)
           names(buying_dates) <- my_tickers
           
-          assets_value_list_wid <- compute_assets_value(data = yf_data, 
-                                                        num_shares = num_shares) 
+          assets_value_list_wid <- compute_assets_value(data = yf_data, num_shares = num_shares) 
           
           my_assets_value <- my_tickers %>%
             lapply(FUN = query_assets_since_buying_date, 
                    assets_dat = assets_value_list_wid[my_tickers],
                    buying_dates = buying_dates) %>%
             bind_rows()
-           
+          
 ## portfolio value --------------------------------------------------------------
           port_value <- get_portfolio_value(my_assets_value)
+          port_ma <- port_value %>%
+            mutate(close = value) %>%
+            add_moving_avg(window = 20) %>%
+            add_moving_avg(window = 50) %>%
+            add_moving_avg(window = 100)
           
           output$port_last_val <- renderInfoBox({
             val <- get_current_value(data = port_value) 
@@ -105,15 +109,10 @@ output$auth_output <- renderPrint({
             calculate_assets_weights() %>% 
             select(c(ticker, value, wts, pct))
           
-          my_assets_returns <- lapply(
-            X = assets_value_list_wid[my_tickers], 
-            FUN = function(d){
-              buying_date <- buying_dates[d$ticker]
-              d %>%
-                filter(date >= buying_date) %>% 
-                compute_daily_returns() 
-            }
-          ) %>% bind_rows() 
+          my_assets_returns <- calculate_multiple_assets_returns(
+            assets_value_list_wid,
+            my_tickers
+          )
           
           weighted_returns <- compute_weighted_returns(ret_data = my_assets_returns, 
                                                        wts_dat = my_assets_weights)
@@ -127,8 +126,9 @@ output$auth_output <- renderPrint({
           
 ## data viz --------------------------------------------------------------
           output$portfolio_evolution <- renderPlotly({
-            plot_evolution(price_dat = port_value, 
-                           cum_ret_dat = port_cumulative_ret) 
+            plot_evolution(price_dat = port_ma, 
+                           cum_ret_dat = port_cumulative_ret, 
+                           with_ma = T) 
           })
           
           max_date <- max(buying_dates)
@@ -160,13 +160,57 @@ output$auth_output <- renderPrint({
             infoBox_asset_cumret(worst_asset, type = "worst")
           })
           
+## correlations -------------------------------------------------------------- 
+          
+### calculate correlations btw assets returns --------------------------------------------------------------
+          
+          start_date <- today() - months(6)
+          
+          my_assets_returns_6m <- calculate_multiple_assets_returns(
+            assets_value_list_wid,
+            my_tickers,
+            start_date = today() - months(6)
+          ) %>%
+            pivot_wider(id_cols = date, 
+                        names_from = ticker, 
+                        values_from = ret)
+          colnames(my_assets_returns_6m) <- c("date", names(my_tickers))
+          
+          cor_mat <- my_assets_returns_6m %>% 
+            select(-date) %>%
+            cor(use = "complete.obs")
+          
+          p_mat <- my_assets_returns_6m %>% 
+            select(-date) %>%
+            cor_pmat(use = "complete.obs")
+          
+### portfolio average correlation --------------------------------------------------------------
+          avg_cor <- calculate_avg_cor(cor_mat, my_assets_weights$wts)
+          
+### portfolio sharpe ratio --------------------------------------------------------------
+          sr <- calculate_sharpeRatio(port_weighted_ret$ret)
+          
+### data viz --------------------------------------------------------------
+          
+          output$cor_mat <- renderPlotly({
+            plot_cor_mat(cor_mat, p_mat)
+          })
+          
+          output$sharpeRatio <- renderInfoBox({
+            infoBox_sharpe(sr)
+          })
+          
+          output$avg_cor <- renderInfoBox({
+            infoBox_avg_cor(avg_cor)
+          })
+          
 ## portfolio infos --------------------------------------------------------------
           
           port_info <- format_portfolio_info(tickers, buying_dates, num_shares)
           output$port_info <- renderDataTable( { port_info },
                                                options = list(pageLength = 10,
                                                               lengthMenu = c(10, 25, 50, 100)) )
-          
+        
           
 ## portfolio data table --------------------------------------------------------------
           port_dat <- merge(x = port_value, 
@@ -478,7 +522,7 @@ output$auth_output <- renderPrint({
               format_table_numbers() %>% 
               select(-date)
           }, 
-          options = list(pageLength = 5,
+          options = list(pageLength = 3,
                          lengthMenu = c(1, 3, 5)) 
           )
           
@@ -514,13 +558,15 @@ output$auth_output <- renderPrint({
               if (length(recommended_tickers) == 1){
                 cumrets %>%
                   plot_ly() %>%
-                  plot_cumulative_returns(legend_group = NULL)
+                  plot_cumulative_returns(legend_group = NULL) %>% 
+                  layout(showlegend = F)
               }
               else{
                 cumrets %>%
                   plot_ly() %>%
                   plot_cumulative_returns(multiple = T,
-                                          legend_group = NULL)
+                                          legend_group = NULL) %>% 
+                  layout(showlegend = F)
               }
             }
             

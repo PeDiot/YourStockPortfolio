@@ -1,148 +1,27 @@
+# Load data ------------------------------------------------------------------
+
+load(file = "cac40_assets.RData")
+load(file = "stoxx600_assets.RData")
+load(file = "dowJ_assets.RData")
+load(file = "sp100_assets.RData")
+
 # Stocks ------------------------------------------------------------------
 
+stock_tickers <- c(cac40_assets$tickers, 
+                   stoxx600_assets$tickers, 
+                   dowJ_assets$tickers, 
+                   sp100_assets$tickers, 
+                   "COIN") %>% unique()
 
-stock_tickers <- c("1QZ.F", 
-                   "UEN.F", 
-                   "OVH.PA", 
-                   "TFI.PA",
-                   "APC.F", 
-                   "MSF.F", 
-                   "ABEC.F", 
-                   "AMZ.F", 
-                   "ALUVI.PA", 
-                   "COX.PA", 
-                   "NAVYA.PA", 
-                   "BRK-B", 
-                   "B1C.F", 
-                   "NNND.F", 
-                   "FB2A.F", 
-                   "NVD.F", 
-                   "TL0.F", 
-                   "NFC.F",
-                   "2PP.F", 
-                   "MC.PA",
-                   "OR.PA",
-                   "RMS.PA",
-                   "TTE.PA",
-                   "SAN.PA", 
-                   "SU.PA",
-                   "AIR.PA",
-                   "KER.PA",
-                   "BNP.PA",
-                   "EL.PA",
-                   "AI.PA", 
-                   "CS.PA",
-                   "DSY.PA",
-                   "STLA.PA",
-                   "DG.PA",
-                   "RI.PA",
-                   "SAF.PA",
-                   "ACA.PA",
-                   "STM.PA",
-                   "BN.PA",
-                   "CAP.PA",
-                   "SGO.PA",
-                   "ENGI.PA",
-                   "ML.PA",
-                   "GLE.PA",
-                   "LR.PA",
-                   "ORA.PA",
-                   "VIE.PA",
-                   "TEP.PA",
-                   "ERF.PA",
-                   "HO.PA",
-                   "PUB.PA",
-                   "WLN.PA",
-                   "CA.PA",
-                   "ALO.PA",
-                   "VIV.PA",
-                   "EN.PA",
-                   "RNO.PA", 
-                   "3V64.F", 
-                   "WMT.F", 
-                   "NKE.F", 
-                   "FOO.F", 
-                   "526.F", 
-                   "SRB.F", 
-                   "CSA.F", 
-                   "GRMN", 
-                   "2ON.F", 
-                   "2RR.F", 
-                   "WDP.F") 
-
-stock_names <- c("Coinbase", 
-                 "Ubisoft", 
-                 "OVH Groupe", 
-                 "TF1", 
-                 "Apple", 
-                 "Microsoft", 
-                 "Alphabet", 
-                 "Amazon", 
-                 "UV Germi", 
-                 "Nicox", 
-                 "Navya", 
-                 "Berkshire Hathaway", 
-                 "Baidu", 
-                 "Tencent", 
-                 "Meta Platforms", 
-                 "NVIDIA", 
-                 "Tesla", 
-                 "Netflix", 
-                 "PayPal", 
-                 "LVMH",
-                 "L'OREAL",
-                 "HERMES INTL",
-                 "TOTALENERGIES",
-                 "SANOFI",           
-                 "SCHNEIDER ELECTRIC SE",
-                 "AIRBUS SE",            
-                 "KERING",
-                 "BNP PARIBAS ACT.A",
-                 "ESSILORLUXOTTICA",
-                 "AIR LIQUIDE",
-                 "AXA",
-                 "DASSAULT SYSTEMES",
-                 "STELLANTIS NV",
-                 "VINCI",
-                 "PERNOD RICARD",
-                 "SAFRAN",            
-                 "CREDIT AGRICOLE",
-                 "STMICROELECTRONICS",
-                 "DANONE",
-                 "CAPGEMINI",
-                 "SAINT GOBAIN",
-                 "ENGIE",
-                 "MICHELIN",
-                 "SOCIETE GENERALE",
-                 "LEGRAND",
-                 "ORANGE",
-                 "VEOLIA ENVIRON.",
-                 "TELEPERFORMANCE",
-                 "EUROFINS SCIENT.",
-                 "THALES",
-                 "PUBLICIS GROUPE SA",
-                 "WORLDLINE",
-                 "CARREFOUR",
-                 "ALSTOM",
-                 "VIVENDI SE",
-                 "BOUYGUES",           
-                 "RENAULT", 
-                 "visa", 
-                 "walmart", 
-                 "nike", 
-                 "salesforce inc", 
-                 "mongodb", 
-                 "starbucks", 
-                 "accenture", 
-                 "garmin ltd", 
-                 "peloton", 
-                 "alibaba", 
-                 "THE WALT DISNEY COMPANY") %>% str_to_upper()
+stock_names <- c(rownames(cac40_assets), 
+                 rownames(stoxx600_assets),
+                 rownames(dowJ_assets), 
+                 rownames(sp100_assets), 
+                 "COINBASE") %>% unique()
 
 names(stock_tickers) <- stock_names
 
 # Crypto ------------------------------------------------------------------
-
 
 crypto_tickers <- c("BTC-EUR", 
                     "ETH-EUR", 
@@ -158,7 +37,9 @@ crypto_tickers <- c("BTC-EUR",
                     "XRP-EUR",
                     "LTC-EUR", 
                     "USDT-EUR", 
-                    "USDC-EUR")
+                    "USDC-EUR", 
+                    "ADA-EUR", 
+                    "AVAX-EUR")
 
 crypto_names <- c("Bitcoin", 
                   "Ethereum", 
@@ -174,7 +55,9 @@ crypto_names <- c("Bitcoin",
                   "Ripple", 
                   "Litecoin",
                   "Tether", 
-                  "USDC") %>% str_to_upper()
+                  "USDC", 
+                  "cardano", 
+                  "avalanche") %>% str_to_upper()
 
 names(crypto_tickers) <- crypto_names
 
@@ -183,17 +66,14 @@ names(crypto_tickers) <- crypto_names
 
 
 etf_tickers <- c("^FCHI", 
-                 "^GSPC", 
-                 "E5T.F")
+                 "^GSPC") 
 
 etf_names <- c("CAC40", 
-               "S&P 500", 
-               "EUROTECH") 
+               "S&P 500") 
 
 names(etf_tickers) <- etf_names
 
 # Data ------------------------------------------------------------------
-
 
 symbols <- structure(list(
   tickers = c(crypto_tickers, 
@@ -204,20 +84,20 @@ symbols <- structure(list(
   row.names = c(crypto_names, 
                 stock_names, 
                 etf_names)
-)
+) %>% 
+  distinct(tickers, .keep_all = T) 
 
 
 # My assets ------------------------------------------------------------------
-
 
 my_tickers <- c("BTC-EUR", 
                 "ETH-EUR", 
                 "MATIC-EUR", 
                 "MANA-EUR", 
-                "1QZ.F", 
-                "AMZ.F", 
-                "FB2A.F", 
-                "NVD.F")
+                "COIN", 
+                "AMZN", 
+                "FB", 
+                "NVDA")
 
 my_tickers_ix <- lapply(
   X = 1:nrow(symbols), 
@@ -251,3 +131,15 @@ my_num_shares <- c(0.00037241,
                    0.22274457)
 
 names(my_num_shares) <- my_tickers
+
+
+# USD assets ------------------------------------------------------------------
+
+usd_tickers <- c(
+  setdiff(x = stock_tickers,
+          y = c(cac40_assets$tickers, 
+                stoxx600_assets$tickers)), 
+  "^GSPC"
+)
+
+my_usd_assets <- intersect(x = usd_tickers, y = my_tickers)
