@@ -728,17 +728,14 @@ calculate_sharpeRatio <- function(returns, rf = .02){
   
 }
 
-calculate_weighted_cor <- function(asset1, asset2, cor_mat){
+calculate_weighted_cor <- function(asset1, asset2, cor_mat, weights){
   "Compute weighted correlation btw two assets returns."
   
   if (asset1 != asset2){
+  
+    w1 <- weights[get_ticker(asset1)]
+    w2 <- weights[get_ticker(asset2)]
     
-    w1 <- my_assets_weights %>%
-      filter(ticker == get_ticker(asset1)) %>%
-      pull(wts)
-    w2 <- my_assets_weights %>%
-      filter(ticker == get_ticker(asset2)) %>%
-      pull(wts)
     return( w1 * w2 * cor_mat[asset1, asset2] )
     
   }
@@ -756,14 +753,14 @@ calculate_avg_cor <- function(cor_mat, weights){
     FUN = function(asset1) lapply(X = assets, 
                                   FUN = calculate_weighted_cor, 
                                   asset2 = asset1, 
-                                  cor_mat = cor_mat) %>% 
+                                  cor_mat = cor_mat,
+                                  weights = weights) %>% 
       unlist() %>% 
       sum()
     
   ) %>% 
     unlist() %>% 
     sum()
-  num <- 2 * num
   
   return(num / denom)
   

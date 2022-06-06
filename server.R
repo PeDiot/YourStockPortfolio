@@ -164,8 +164,6 @@ output$auth_output <- renderPrint({
           
 ### calculate correlations btw assets returns --------------------------------------------------------------
           
-          start_date <- today() - months(6)
-          
           my_assets_returns_6m <- calculate_multiple_assets_returns(
             assets_value_list_wid,
             my_tickers,
