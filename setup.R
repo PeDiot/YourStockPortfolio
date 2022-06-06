@@ -250,6 +250,15 @@ format_portfolio_info <- function(tickers, buying_dates, num_shares){
   
 }
 
+txUSDEUR <- getQuote("USDEUR=X") %>% pull(Last)
+
+usd_to_euros <- function(usd_val){
+  "Convert USD value to €."
+  
+  eur_val <- usd_val * txUSDEUR
+  return(eur_val)
+}
+
 # Value -------------------------------------------------------
 
 compute_assets_value <- function(data, num_shares){
@@ -407,6 +416,40 @@ compute_cumulative_returns <- function(ret_data, all = T, weighted = F){
   return(cum_returns)
   
 }
+
+calculate_multiple_assets_returns <- function(
+  assets_value_list, 
+  tickers = my_tickers,
+  start_date = NULL
+){
+  "Calculate daily returns for multiple assets since each asset buying date or start date."
+  
+  if ( is.null(start_date) ){
+    
+    f <- function(d){
+      buying_date <- my_buying_dates[d$ticker]
+      d %>%
+        filter(date >= buying_date) %>% 
+        compute_daily_returns() 
+    }
+    
+  }
+  
+  else{
+    
+    f <- function(d){
+      d %>%
+        filter(date >= start_date) %>% 
+        compute_daily_returns() 
+    }
+    
+  }
+  
+  lapply(X = assets_value_list[tickers], FUN = f) %>% 
+    bind_rows()
+  
+}
+
 
 get_current_cumret <- function(cumret_data){
   "Return cumulative returns at last date." 
@@ -674,6 +717,58 @@ add_price_direction <- function(fin_data){
     ) %>% as.factor())
 }
 
+calculate_sharpeRatio <- function(returns, rf = .02){
+  "Calculate sharpe ratio based on returns and risk free rate."
+  
+  sr <- SharpeRatio(
+    R = ts(data = returns),
+    Rf = rf
+  )
+  return(sr[1, 1])
+  
+}
+
+calculate_weighted_cor <- function(asset1, asset2, cor_mat){
+  "Compute weighted correlation btw two assets returns."
+  
+  if (asset1 != asset2){
+    
+    w1 <- my_assets_weights %>%
+      filter(ticker == get_ticker(asset1)) %>%
+      pull(wts)
+    w2 <- my_assets_weights %>%
+      filter(ticker == get_ticker(asset2)) %>%
+      pull(wts)
+    return( w1 * w2 * cor_mat[asset1, asset2] )
+    
+  }
+  
+}
+
+calculate_avg_cor <- function(cor_mat, weights){
+  "Calculate average correlation btw several assets."
+  
+  assets <- colnames(cor_mat)
+  denom <- 1 - sum(weights**2)
+  
+  num <- lapply(
+    X = names(my_tickers), 
+    FUN = function(asset1) lapply(X = assets, 
+                                  FUN = calculate_weighted_cor, 
+                                  asset2 = asset1, 
+                                  cor_mat = cor_mat) %>% 
+      unlist() %>% 
+      sum()
+    
+  ) %>% 
+    unlist() %>% 
+    sum()
+  num <- 2 * num
+  
+  return(num / denom)
+  
+}
+
 # Data Viz -------------------------------------------------------
 
 range_selector_period <- function(
@@ -748,8 +843,7 @@ plotly_layout <- function(
 
 plot_daily_returns <- function(
   plotly_obj, 
-  trace_col, 
-  title, 
+  trace_col,
   legend_group,
   yaxis = NULL
 ){
@@ -761,7 +855,7 @@ plot_daily_returns <- function(
                 mode = "lines",
                 marker = NULL,
                 x = ~date,
-                y = ret,
+                y = ~ret,
                 name = "Daily returns", 
                 yaxis = yaxis, 
                 line = list(width = 1.7, 
@@ -868,9 +962,10 @@ plot_cumulative_returns <- function(
 plot_price_evolution <- function(
   plotly_obj, 
   title, 
-  legend_group, 
+  legend_group = NULL, 
   ticker = NULL, 
-  yaxis = NULL
+  yaxis = NULL, 
+  with_ma = F
 ){
   "Plot price evolution."
   
@@ -881,31 +976,19 @@ plot_price_evolution <- function(
     trace_name <- ticker
   }
   
-  if (is.null(yaxis)){
-    p <- plotly_obj %>%
-      add_trace(type = "scatter", 
-                mode = "lines",
-                marker = NULL,
-                x = ~date,
-                y = ~value,
-                name = trace_name, 
-                line = list(color = evolution,
-                            width = 2), 
-                legendgroup = legend_group)
-  }
-  else{
-    p <- plotly_obj %>%
-      add_trace(type = "scatter", 
-                mode = "lines",
-                marker = NULL,
-                x = ~date,
-                y = ~value,
-                name = trace_name,
-                yaxis = yaxis, 
-                line = list(color = evolution,
-                            width = 1.7), 
-                legendgroup = legend_group)
-  }
+  p <- plotly_obj %>%
+    add_trace(type = "scatter", 
+              mode = "lines",
+              marker = NULL,
+              x = ~date,
+              y = ~value,
+              name = trace_name,
+              yaxis = yaxis, 
+              line = list(color = evolution,
+                          width = 1.7), 
+              legendgroup = legend_group)
+  
+  if (with_ma == T){ p <- p %>% ma_chart(yaxis = yaxis) }
   
   return(p)
   
@@ -916,7 +999,8 @@ plot_evolution <- function(
   price_dat,
   cum_ret_dat = NULL, 
   daily_ret_dat = NULL, 
-  ticker = NULL
+  ticker = NULL, 
+  with_ma = F
 ){
   "Combine price evolution and cumulative/daily returns plots."
   
@@ -936,7 +1020,8 @@ plot_evolution <- function(
     p <- plot_ly(data) %>%
       plot_price_evolution(title = "", 
                            legend_group = "one", 
-                           ticker = ticker) %>%
+                           ticker = ticker, 
+                           with_ma = with_ma) %>%
       plot_cumulative_returns(trace_col = trace_col, 
                               title = "", 
                               yaxis = "y2", 
@@ -959,7 +1044,8 @@ plot_evolution <- function(
     p <- plot_ly(data) %>%
       plot_price_evolution(title = "", 
                            legend_group = "one",
-                           ticker = ticker) %>%
+                           ticker = ticker, 
+                           with_ma = with_ma) %>%
       plot_daily_returns(trace_col = trace_col, 
                          title = "", 
                          yaxis = "y2", 
@@ -1025,7 +1111,6 @@ plot_portfolio_composition <- function(assets_weights){
 
 # --- Indicators
 
-
 candlestick_chart <- function(ticker, price_data){
   "Build plotly candlestick chart with moving averages for a given asset."
   
@@ -1041,12 +1126,27 @@ candlestick_chart <- function(ticker, price_data){
                                             width = 1.5)), 
               decreasing = list(line = list(color = low,
                                             width = 1.5))) %>%
+    ma_chart()
+
+  p <- p %>%
+    plotly_layout(title = "", title.y = "€")
+  
+  return(p)
+  
+  
+}
+
+ma_chart <- function(plotly_obj, yaxis = NULL){
+  "Add moving averages to an existing plotly chart."
+  
+  plotly_obj %>%
     add_trace(type = "scatter", 
               mode = "lines",
               marker = NULL,
               x = ~date,
               y = ~MA20,
               name = "MA20",
+              yaxis = yaxis, 
               line = list(color = short, 
                           width = 1.5),
               hoverinfo = "none") %>%
@@ -1056,6 +1156,7 @@ candlestick_chart <- function(ticker, price_data){
               x = ~date,
               y = ~MA50,
               name = "MA50",
+              yaxis = yaxis, 
               line = list(color = medium,
                           width = 1.5), 
               hoverinfo = "none") %>%
@@ -1065,16 +1166,12 @@ candlestick_chart <- function(ticker, price_data){
               x = ~date,
               y = ~MA100,
               name = "MA100",
+              yaxis = yaxis, 
               line = list(color = long, 
                           dash = "dot", 
                           width = 1.5), 
               hoverinfo = "none")
-
-  p <- p %>%
-    plotly_layout(title = "", title.y = "€")
-  
-  return(p)
-  
+    
   
 }
 
@@ -1345,6 +1442,28 @@ ic_alpha <- function(alpha, acf_res){
   
   ic <- qnorm((1 + (1 - alpha))/2)/sqrt(acf_res$n.used)
   return(ic)
+  
+}
+
+plot_cor_mat <- function(cor_mat, p_mat = NULL){
+  "Plotly visualization of correlation matrix."
+  
+  cor_plot <- ggcorrplot(cor_mat,
+                         hc.order = TRUE, 
+                         lab = T, 
+                         lab_col = "#76787B",
+                         p.mat = p_mat, 
+                         type = "lower",
+                         outline.col = "white",
+                         tl.cex = 10,
+                         ggtheme = ggplot2::theme_minimal(),
+                         colors = c("#E88787", "white", "#758ADA")) +
+    theme(legend.position = "none", 
+          axis.title = element_text(color = "#76787B"))
+  
+  ggplotly(cor_plot) %>%
+    layout(xaxis = list(showgrid = FALSE),
+           yaxis = list(showgrid = FALSE))
   
 }
 
@@ -1686,6 +1805,34 @@ infoBox_asset_cumret <- function(asset, type = "best"){
           icon = icon, 
           color = color, 
           fill = F)
+  
+}
+
+infoBox_sharpe <- function(sr){
+  "Return infoBox for Sharpe ratio."
+  
+  color <- if_else(sr < 0,
+                   "red", 
+                   "green")
+  ib <- infoBox(title = "Sharpe ratio", 
+                value = round(sr, 2), 
+                icon = tags$i(class = "fas fa-percent", 
+                              style="font-size: 20px"), 
+                color = color, 
+                fill = F)
+  return(ib)
+}
+
+infoBox_avg_cor <- function(avg_cor){
+  "Return infoBox for average correlation."
+  
+  ib <- infoBox(title = "Average correlation", 
+                value = round(avg_cor, 2), 
+                icon = tags$i(class = "fas fa-chart-line", 
+                              style="font-size: 20px"), 
+                color = "light-blue", 
+                fill = F)
+  return(ib)
   
 }
 
