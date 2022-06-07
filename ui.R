@@ -78,44 +78,20 @@ ui <- fluidPage(
                         
 ## inputs ---------------------------------------------------------
                         sidebarPanel( 
+                          
                           width = 3, 
+                          
                           h4(strong("Your Portfolio"),
                              style = "color:#76787B;"), 
                           hr(),
+                          
                           tags$head(tags$style("h5 {color:#76787B;}")),
-                          h5(strong("BITCOIN")), 
-                          asset_inputs(asset = "BITCOIN", 
-                                       val = 0.00037241, 
-                                       buying_date = "2022-03-02"),
-                          h5(strong("ETHEREUM")), 
-                          asset_inputs(asset = "ETHEREUM", 
-                                       val = 0.00594658,
-                                       buying_date = "2022-02-02"),
-                          h5(strong("POLYGON (MATIC)")), 
-                          asset_inputs(asset = "POLYGON (MATIC)", 
-                                       val = 10.8270573, 
-                                       buying_date = "2022-02-03"),
-                          h5(strong("DECENTRALAND (MANA)")), 
-                          asset_inputs(asset = "DECENTRALAND (MANA)", 
-                                       val = 10.8270573, 
-                                       buying_date = "2022-03-02"), 
-                          h5(strong("COINBASE")), 
-                          asset_inputs(asset = "COINBASE", 
-                                       val = 0.10934065, 
-                                       buying_date = "2022-03-29"),
-                          h5(strong("AMAZON")), 
-                          asset_inputs(asset = "AMAZON", 
-                                       val = 0.00790615, 
-                                       buying_date = "2022-04-08"), 
-                          h5(strong("META PLATFORMS")), 
-                          asset_inputs(asset = "META-PLATFORMS", 
-                                       val = 0.20416538, 
-                                       buying_date = "2022-05-17"),
-                          h5(strong("NVIDIA")), 
-                          asset_inputs(asset = "NVIDIA", 
-                                       val = 0.22274457, 
-                                       buying_date = "2022-05-30"),
-                          style = "position: fixed; height: 80vh; overflow-y: auto; width: 360px;",
+                          h5(strong("Stocks")), 
+                          HTML("<ul><li>Coinbase (Lydia)</li><li>Amazon (Lydia)</li><li>Meta Platforms (Lydia)</li><li>Nvidia (Lydia)</li></ul>"),
+                          br(), 
+                          h5(strong("Cryptocurrencies")), 
+                          HTML("<ul><li>Bitcoin (Lydia & Bitstack)</li><li>Ethereum (Binance)</li><li>Polygon MATIC (Metamask)</li><li>Decentraland MANA (Lydia)</li></ul>"),
+      
                         ), 
                         
                         mainPanel(

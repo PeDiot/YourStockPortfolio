@@ -243,8 +243,8 @@ format_portfolio_info <- function(tickers, buying_dates, num_shares){
            `Number of shares` = num_shares, 
            `Buying price (€)` = buying_prices, 
            `Current price (€)` = current_prices, 
-           `€ returns` = val_returns, 
-           `% returns` = pct_returns) %>%
+           `€ Returns` = val_returns, 
+           `% Returns` = pct_returns) %>%
     as.data.frame(row.names = 1:nrow(.)) %>% 
     arrange(desc(`Buying date`))
   
