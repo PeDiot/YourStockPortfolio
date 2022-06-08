@@ -464,7 +464,7 @@ output$auth_output <- renderPrint({
               mutate(ticker = new_tickers) %>% 
               format_table_numbers() %>% 
               select(-date) %>% 
-              rename_at( vars( ticker:adjusted ), str_to_title )
+              rename_at( vars( !contains("MACD") & !contains("RSI") ), str_to_title )
           }, 
           options = list(pageLength = 3,
                          lengthMenu = c(1, 3, 5)) 
