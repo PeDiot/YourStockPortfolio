@@ -169,7 +169,7 @@ output$auth_output <- renderPrint({
 # financial indicators per asset --------------------------------------------------------------
   
     assets_value_list <- compute_assets_value(data = yf_data, 
-                                              num_shares = my_num_shares)        
+                                              num_shares = my_num_shares)    
   
 ## start date financial analysis --------------------------------------------------------------
   
@@ -208,11 +208,13 @@ output$auth_output <- renderPrint({
   observeEvent(
     
     c(input$ticker_fin_analysis, 
-      input$start_date_fin_analysis),
+      input$start_date_fin_analysis,
+      input$indicator),
     {
       
       req(input$start_date_fin_analysis)
       req(input$ticker_fin_analysis)
+      req(input$indicator)
       
 ## asset data with indicators --------------------------------------------------------------
       prices <- assets_value_list[[input$ticker_fin_analysis]] %>%
@@ -221,7 +223,13 @@ output$auth_output <- renderPrint({
         add_moving_avg(window = 50) %>%
         add_moving_avg(window = 100) %>%
         add_macd() %>%
-        add_rsi()
+        add_rsi() %>% 
+        add_obv() %>% 
+        add_price_direction()
+      
+      bbands_dat <- calculate_bbands(price_data = prices)
+      prices <- prices %>%
+        add_bbands(bbands_data = bbands_dat)
       
 ## asset returns --------------------------------------------------------------
       daily_ret <- prices %>%
@@ -263,38 +271,10 @@ output$auth_output <- renderPrint({
         infoBox_last_cumret(last_cumret)
       })
       
-## candlestick with MAs --------------------------------------------------------------
-      output$candlestick_plot <- renderPlotly({
-        prices %>%
-          candlestick_chart(ticker = input$ticker_fin_analysis) 
+## indicators data viz --------------------------------------------------------------
+      output$financial_data_viz <- renderPlotly({
+        financialDataViz(prices, input$ticker_fin_analysis, input$indicator) 
       })
-      
-## bollinger bands --------------------------------------------------------------
-      bbands_dat <- calculate_bbands(price_data = prices)
-      output$bbands_plot <- renderPlotly({
-        bbands_chart(bbands_dat, input$ticker_fin_analysis)
-      })
-      
-## MACD --------------------------------------------------------------
-      output$macd_plot <- renderPlotly({
-        prices %>%
-          macd_chart(ticker = input$ticker_fin_analysis) 
-      })
-      
-## RSI --------------------------------------------------------------
-      output$rsi_plot <- renderPlotly({
-        prices %>%
-          rsi_chart(ticker = input$ticker_fin_analysis) 
-      })
-      
-## On-Balance Volume --------------------------------------------------------------
-      output$obv_plot <- renderPlotly({
-        prices %>%
-          add_obv() %>%
-          add_price_direction() %>%
-          obv_chart(ticker = input$ticker_fin_analysis)
-      })
-      
       
     }
   )
@@ -427,22 +407,22 @@ output$auth_output <- renderPrint({
 # stock recommender --------------------------------------------------------------
       
       observeEvent(
-        c(input$indicator, 
+        c(input$reco_indicator, 
           input$recommendation_start_date, 
           input$action), 
         
         {
           
-          req(input$indicator)
+          req(input$reco_indicator)
           req(input$recommendation_start_date)
           req(input$action)
           
 ## compute recommendations --------------------------------------------------------------
-          if (length(input$indicator) == 2){
+          if (length(input$reco_indicator) == 2){
             criterion <- "MACD+RSI"
           }
           else{
-            criterion <- input$indicator
+            criterion <- input$reco_indicator
           }
           
           recommendation <- stock_recommender(stock_data = yf_data, 

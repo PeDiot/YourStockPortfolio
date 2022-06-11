@@ -226,9 +226,11 @@ format_portfolio_info <- function(tickers, buying_dates, num_shares){
     
   ) %>% unlist()
   
-  val_returns <- num_shares * (current_prices - buying_prices)
+  val_returns <- num_shares * (current_prices - buying_prices) %>% 
+    round(2)
   
-  pct_returns <- 100 * calculate_total_returns(buying_prices, current_prices)
+  pct_returns <- 100 * calculate_total_returns(buying_prices, current_prices) %>%
+    round(2)
   
   data.frame(buying_dates = buying_dates,
              assets = assets, 
@@ -237,7 +239,9 @@ format_portfolio_info <- function(tickers, buying_dates, num_shares){
              current_prices = current_prices,
              val_returns = val_returns, 
              pct_returns = pct_returns) %>% 
+    mutate_at( vars(val_returns:pct_returns), as.character ) %>% 
     format_table_numbers() %>%
+    mutate_at( vars(val_returns:pct_returns), as.numeric ) %>% 
     rename(`Buying date` = buying_dates, 
            Asset = assets, 
            `Number of shares` = num_shares, 
@@ -550,7 +554,7 @@ calculate_bbands <- function(
   n_periods = 20,
   sd = 2
 ){
-  "Compute bollinger bands and %B."
+  "Compute Bollinger bands and %B."
   
   closes <- price_data %>% pull(close)
   dates <- price_data %>%
@@ -563,6 +567,17 @@ calculate_bbands <- function(
     mutate(date = dates, 
            close = closes) 
   
+}
+
+add_bbands <- function(price_data, bbands_data){
+  "Add Bollinger bands to price data."
+  
+  new_dat <- merge( x = price_data, 
+                    y = bbands_data %>%
+                      select(c(date, 
+                              up, 
+                              dn)) )
+  return(new_dat)
 }
 
 add_macd <- function(
@@ -604,7 +619,7 @@ add_macd <- function(
     
   }
   
-  return(price_data)
+  return(price_data) 
   
 }
 
@@ -1108,28 +1123,23 @@ plot_portfolio_composition <- function(assets_weights){
 
 # --- Indicators
 
-candlestick_chart <- function(ticker, price_data){
-  "Build plotly candlestick chart with moving averages for a given asset."
+plotly_layout <- function(plotly_obj, title.x = "", title.y){
+  "Customize plotly layout."
   
-  p <- plot_ly(price_data) %>%
-    add_trace(type = "candlestick",
-              x = ~date,
-              open = ~open, 
-              high = ~high, 
-              low = ~low, 
-              close = ~close,
-              name = ticker, 
-              increasing = list(line = list(color = high,
-                                            width = 1.5)), 
-              decreasing = list(line = list(color = low,
-                                            width = 1.5))) %>%
-    ma_chart()
-
-  p <- p %>%
-    plotly_layout(title = "", title.y = "€")
-  
-  return(p)
-  
+  p_layout <- plotly_obj %>%
+    layout(
+      
+      xaxis = list( rangeslider = list(visible = F), 
+                    title = list(text = title.x,
+                                 font = list(color = "#76787B")), 
+                    showgrid = T ),
+      
+      yaxis = list( fixedrange = FALSE, 
+                    title = list(text = title.y,
+                                 font = list(color = "#76787B")), 
+                    showgrid = T )
+      
+    ) 
   
 }
 
@@ -1143,118 +1153,121 @@ ma_chart <- function(plotly_obj, yaxis = NULL){
               x = ~date,
               y = ~MA20,
               name = "MA20",
-              yaxis = yaxis, 
               line = list(color = short, 
                           width = 1.5),
-              hoverinfo = "none") %>%
+              yaxis = yaxis, 
+              hoverinfo = "none", 
+              inherit = F) %>%
     add_trace(type = "scatter", 
               mode = "lines",
               marker = NULL,
               x = ~date,
               y = ~MA50,
               name = "MA50",
-              yaxis = yaxis, 
               line = list(color = medium,
                           width = 1.5), 
-              hoverinfo = "none") %>%
+              yaxis = yaxis, 
+              hoverinfo = "none", 
+              inherit = F) %>%
     add_trace(type = "scatter", 
               mode = "lines",
               marker = NULL,
               x = ~date,
               y = ~MA100,
               name = "MA100",
-              yaxis = yaxis, 
               line = list(color = long, 
                           dash = "dot", 
                           width = 1.5), 
-              hoverinfo = "none")
-    
+              yaxis = yaxis, 
+              hoverinfo = "none", 
+              inherit = F)
+  
   
 }
 
-bbands_chart <- function(bbands_dat, ticker){
-  "Build plotly chart whith prices, bollinger bands and %B."
-  p <- plot_ly(bbands_dat) %>%
-    add_trace(type = "scatter", 
-              mode = "lines",
-              marker = NULL,
+candlestick_chart <- function(plotly_obj, ticker){
+  "Build plotly candlestick chart with moving averages for a given asset."
+  
+  p <- plotly_obj %>%
+    add_trace(type = "candlestick",
               x = ~date,
-              y = ~close,
+              open = ~open, 
+              high = ~high, 
+              low = ~low, 
+              close = ~close,
               name = ticker, 
-              line = list(color = evolution,
-                          width = 1.2), 
-              yaxis = "y1") %>%
-    add_trace(type = "scatter", 
-              mode = "lines",
-              marker = NULL,
-              x = ~date,
-              y = ~mavg,
-              name = "MA20", 
-              line = list(color = short,
-                          dash = "dot", 
-                          width = 1.7), 
-              yaxis = "y1") %>%
+              increasing = list(line = list(color = high,
+                                            width = 1.5)), 
+              decreasing = list(line = list(color = low,
+                                            width = 1.5)), 
+              inherit = F)
+  
+  return(p)
+  
+  
+}
+
+bbands_chart <- function(plotly_obj){
+  "Build plotly chart whith prices, bollinger bands and %B."
+  p <- plotly_obj %>%
     add_trace(type = "scatter", 
               mode = "lines",
               marker = NULL,
               x = ~date,
               y = ~dn, 
-              name = "Lower", 
+              name = "B Bands", 
               line = list(color = bbands,
                           width = .9), 
-              yaxis = "y1") %>%
+              inherit = F) %>%
     add_trace(type = "scatter", 
               mode = "lines",
               marker = NULL,
               x = ~date,
               y = ~up, 
-              name = "Upper", 
+              name = "B Bands", 
               line = list(color = bbands,
                           width = .9), 
-              yaxis = "y1") %>%
-    add_trace(type = "scatter", 
-              mode = "lines",
-              marker = NULL,
-              x = ~date,
-              y = ~pctB, 
-              name = "%B", 
-              line = list(color = pctBB,
-                          width = 1), 
-              yaxis = "y2")
+              showlegend = FALSE, 
+              inherit = F)
   
-  p %>%
-    layout(title = "",
-           xaxis = list(rangeslider = list(visible = F), 
-                        rangeselector = range_selector_period(y_pos = -0.1), 
-                        title = ""),
-           yaxis = list(domain = c(.40, 1),
-                        fixedrange = FALSE,
-                        tickfont = list(color = evolution), 
-                        title = list(text = "€",
-                                     font = list(color = "#76787B"))),
-           yaxis2 = list(domain = c(0, .30),
-                         fixedrange = FALSE,
-                         tickfont = list(color = pctBB), 
-                         title = ""), 
-           legend = plotly_legend())
+  return(p)
   
 }
 
-macd_chart <- function(ticker, price_data){
+volume_chart <- function(data){
+  "Visualize volume evolution given price direction."
+  
+  data %>% 
+    plot_ly(x = ~date, 
+            y = ~volume,
+            type = "bar", 
+            name = "Volume",
+            color = ~direction,
+            colors = c(low, high), 
+            opacity = .6) %>%
+    layout(showlegend = F)
+}
+
+obv_chart <- function(plotly_obj){
+  "Build plotly chart for OBV."
+  
+  p <- plotly_obj %>%
+    add_trace(x = ~date, 
+              y = ~OBV, 
+              type = "scatter",
+              mode = "lines", 
+              marker = NULL, 
+              name = "OBV", 
+              line = list(color = obv,
+                          width = 1.7)) 
+  return(p)
+  
+}
+
+macd_chart <- function(plotly_obj){
   "Build plotly chart for MACD and MACD signal."
   
-  p <- price_data %>%
-    select(c(date, 
-             close, 
-             MACD, 
-             MACDSignal, 
-             MACDHist)) %>%
-    rename(value = close) %>%
-    plot_ly() %>%
-    plot_price_evolution(title = "", 
-                         legend_group = "one", 
-                         yaxis = "y1", 
-                         ticker = ticker) %>%
+  p <- plotly_obj %>%
     add_trace(type = "scatter", 
               mode = "lines",
               marker = NULL,
@@ -1262,9 +1275,7 @@ macd_chart <- function(ticker, price_data){
               y = ~MACD,
               name = "MACD",
               line = list(color = macd,
-                          width = 1.3), 
-              legend_group = "two", 
-              yaxis = "y2") %>%
+                          width = 1.3)) %>%
     add_trace(type = "scatter", 
               mode = "lines",
               marker = NULL,
@@ -1273,53 +1284,22 @@ macd_chart <- function(ticker, price_data){
               name = "MACD Signal",
               line = list(color = long,
                           width = 1,
-                          dash = "dot"), 
-              hoverinfo = "none", 
-              legend_group = "two", 
-              yaxis = "y2") %>%
+                          dash = "dot")) %>%
     add_trace(type = "bar", 
               x = ~date,
               y = ~MACDHist,
-              name = "MACD Histogram",
-              marker = list(color = macdHist),
-              hoverinfo = "none", 
-              legend_group = "two", 
-              yaxis = "y2")
-  
- p <- p %>%
-    layout(title = "",
-           xaxis = list(rangeslider = list(visible = F), 
-                        rangeselector = range_selector_period(y_pos = -0.1), 
-                        title = ""),
-           yaxis = list(domain = c(0.45, 1),
-                        fixedrange = FALSE,
-                        tickfont = list(color = evolution), 
-                        title = list(text = "€",
-                             font = list(color = "#76787B"))), 
-           yaxis2 = list(domain = c(0, 0.35),
-                         fixedrange = FALSE, 
-                         tickfont = list(color = macd), 
-                         title = list(text = "%",
-                              font = list(color = "#76787B"))), 
-           legend = plotly_legend())
+              name = "MACD Hist",
+              marker = list(color = macdHist), 
+              showlegend = F)
   
   return(p)
   
 }
 
-rsi_chart <- function(ticker, price_data){
+rsi_chart <- function(plotly_obj){
   "Build plotly chart for RSI signal and bounds."
   
-  p <- price_data %>%
-    select(c(date, 
-             close, 
-             RSI)) %>%
-    rename(value = close) %>%
-    plot_ly() %>%
-    plot_price_evolution(title = "", 
-                         legend_group = "one", 
-                         yaxis = "y1", 
-                         ticker = ticker) %>%
+  p <- plotly_obj %>%
     add_trace(type = "scatter", 
               mode = "lines",
               marker = NULL,
@@ -1327,21 +1307,17 @@ rsi_chart <- function(ticker, price_data){
               y = ~RSI,
               name = "RSI",
               line = list(color = rsi,
-                          width = 1.2), 
-              legend_group = "two",  
-              yaxis = "y2") %>%
+                          width = 1.2)) %>%
     add_trace(type = "scatter", 
               mode = "lines",
               marker = NULL,
               x = c(~min(date), ~max(date)),
               y = c(70,70),
-              name = "Upper RSI (70)",
+              name = "RSI (70)",
               line = list(color = "red",
                           width = 0.5,
                           dash = "dot"), 
-              hoverinfo = "none",  
-              legend_group = "two", 
-              yaxis = "y2") %>%
+              showlegend = F) %>%
     add_trace(type = "scatter", 
               mode = "lines",
               marker = NULL,
@@ -1351,88 +1327,67 @@ rsi_chart <- function(ticker, price_data){
               line = list(color = "red",
                           width = 0.5,
                           dash = "dot"), 
-              hoverinfo = "none", 
-              legend_group = "two",  
-              yaxis = "y2")
-  
-  p <- p %>%
-    layout(title = "",
-           xaxis = list(rangeslider = list(visible = F), 
-                        rangeselector = range_selector_period(y_pos = -0.1), 
-                        title = ""),
-           yaxis = list(domain = c(0.45, 1),
-                        fixedrange = FALSE,
-                        tickfont = list(color = evolution), 
-                        title = list(text = "€",
-                                     font = list(color = "#76787B"))), 
-           yaxis2 = list(domain = c(0, 0.35),
-                         fixedrange = FALSE, 
-                         tickfont = list(color = rsi), 
-                         title = ""), 
-           legend = plotly_legend())
-  
+              showlegend = F)
   return(p)
   
 }
 
-obv_chart <- function(ticker, price_data){
-  "Build plotly chart for price, volume and OBV."
+financialDataViz <- function(data, ticker, indicators = c("Volume", "MACD", "RSI")){
+  "Combine multiple financial charts."
   
-  p <- price_data %>%
-    add_obv() %>% 
-    add_price_direction() %>%
-    plot_ly() %>%
-    add_trace(x = ~date,
-              type = "candlestick",
-              open = ~open, close = ~close,
-              high = ~high, low = ~low, name = ticker, 
-              increasing = high, decreasing = low, 
-              yaxis = "y1",
-              legendgroup = "one") %>% 
-    add_trace(x = ~date, 
-              y = ~volume,
-              type = "bar", 
-              name = "Volume",
-              marker = list(color = "#AAAAAA", 
-                            line = list(color = "#AAAAAA")),
-              yaxis = "y2",
-              inherit = F) %>%
-    add_trace(x = ~date, 
-              y = ~OBV, 
-              type = "scatter",
-              mode = "lines", 
-              marker = NULL, 
-              name = "OBV", 
-              line = list(color = obv,
-                          width = 1.7), 
-              legendgroup = "three", 
-              yaxis = "y3") 
+  plot_list <- list(
+    "candlestick" = data %>% 
+      plot_ly() %>%
+      candlestick_chart(ticker = ticker) %>% 
+      ma_chart() %>% 
+      bbands_chart() %>%
+      plotly_layout(title.y = "€")
+  )
   
-  p %>%
-    layout(title = "",
-           xaxis = list(rangeslider = list(visible = F), 
-                        rangeselector = range_selector_period(y_pos = -0.1), 
-                        title = ""),
-           yaxis = list(domain = c(0.55, 1),
-                        fixedrange = FALSE,
-                        tickfont = list(color = evolution), 
-                        title = list(text = "€",
-                                     font = list(color = "#76787B"))), 
-           yaxis2 = list(domain = c(0.35, 0.5),
-                         fixedrange = FALSE, 
-                         tickfont = list(color = "#AAAAAA"), 
-                         title = list(text = "Volume",
-                                      font = list(color = "#76787B"))), 
-           yaxis3 = list(domain = c(0, 0.3),
-                         fixedrange = FALSE, 
-                         tickfont = list(color = obv), 
-                         title = list(text = "OBV",
-                                      font = list(color = "#76787B"))), 
-           legend = plotly_legend())
-    
+  plot_heights <- c(.4)
+  
+  if ("Volume" %in% indicators){
+    plot_list[["volume"]] <- data %>%
+      volume_chart() %>% 
+      plotly_layout(title.y = "Volume")
+    plot_heights <- c(plot_heights, .15)
+  }
+  
+  if ("OBV" %in% indicators){
+    plot_list[["OBV"]] <- data %>%
+      plot_ly() %>% 
+      obv_chart() %>% 
+      plotly_layout(title.y = "") 
+    plot_heights <- c(plot_heights, .15)
+  }
+  
+  if ("MACD" %in% indicators){
+    plot_list[["MACD"]] <- data %>%
+      plot_ly() %>% 
+      macd_chart() %>%
+      plotly_layout(title.y = "")
+    plot_heights <- c(plot_heights, .15)
+  }
+  
+  if ("RSI" %in% indicators){
+    plot_list[["RSI"]] <- data %>%
+      plot_ly() %>% 
+      rsi_chart() %>%
+      plotly_layout(title.y = "")
+    plot_heights <- c(plot_heights, .15)
+  }
+  
+  fig <- subplot(plot_list,
+                 heights = plot_heights, 
+                 nrows = length(plot_list),
+                 shareX = TRUE, 
+                 titleY = TRUE) %>% 
+    layout(title = "", 
+           legend = plotly_legend(y.pos = -.1))
+  
+  return(fig)
   
 }
-  
 
 ic_alpha <- function(alpha, acf_res){
   "Confidence interval for ACF."
