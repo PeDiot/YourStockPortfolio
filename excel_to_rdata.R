@@ -7,9 +7,9 @@ format__excel_data <- function(excel_file_name, sheet_name){
   
   dat %>%
     distinct(shortName, .keep_all = T) %>% 
-    mutate( name = if_else(is.na(shortName), 
-                           longName, 
-                           shortName) %>% str_to_upper() ) %>% 
+    mutate( name = longName %>% 
+               gsub(pattern = "[[:punct:] ]+", replacement = " ") %>% 
+               str_to_upper() ) %>% 
     select( c(symbol, name) ) %>% 
     rename(tickers = symbol) %>% 
     column_to_rownames(var = "name") 
@@ -17,7 +17,7 @@ format__excel_data <- function(excel_file_name, sheet_name){
   
 }
 
-sp500IT_assets <- format__excel_data("tickers_america.xlsx", "S&P 500 Information Technology")
+stoxx600_assets <- format__excel_data("tickers_france.xlsx", "STOXX 600")
 
-save(sp500IT_assets, file = "sp500IT_assets.RData")
+save(stoxx600_assets, file = "stoxx600_assets.RData")
 
