@@ -22,6 +22,7 @@ long <- "black"
 macd <- "#C47D72"
 macdHist <- "#B5CDD2"
 rsi <- "#F3B0DE"
+stoch_rsi <- "purple"
 bbands <- "#CACED2"
 pctBB <- "#5EB6B1"
 pred <- "#A48BAB"
@@ -649,7 +650,7 @@ get_macd_signals <- function(price_data){
 
 add_rsi <- function(
   price_data, 
-  rsi_period = 10, 
+  rsi_period = 14, 
   ma_type = "WMA"
 ){
   "Compute Relative Strength Index (RSI) for given period and prices."
@@ -665,7 +666,7 @@ add_rsi <- function(
   else{
     price_data <- price_data %>%
       mutate(RSI = RSI(price = close, 
-                       n = 14, 
+                       n =   rsi_period,  
                        maType = ma_type))
   }
 
@@ -673,10 +674,24 @@ add_rsi <- function(
   
 }
 
+add_stochRsi <- function(data){
+  "Compute and add stochastic RSI to existing data."
+  
+  minRSI <- data %>%
+    pull(RSI) %>% 
+    min(na.rm = T)
+  maxRSI <- data %>% 
+    pull(RSI) %>% 
+    max(na.rm = T)
+  
+  data %>% 
+    mutate(stochRSI = 100 * ( RSI - minRSI ) / ( maxRSI - minRSI ))
+  
+}
+
 get_rsi_signals <- function(
   price_data,
-  lower_thresold = 30, 
-  upper_thresold = 70, 
+  rsi_type = "RSI", 
   ma_window = 100
 ){
   "Identify buying and selling signals from RSI for days where closing price > MAlong."
@@ -684,34 +699,61 @@ get_rsi_signals <- function(
   start_date <- price_data %>% 
     pull(date) %>%
     min()
+  max_date <- price_data %>% 
+    pull(date) %>% 
+    max()
   
-  if ( (today() - start_date) > ma_window ) {
+  if ( !( paste0("MA", ma_window) %in% colnames(price_data) ) ){
     
-    if ("RSI" %in% colnames(price_data)){
-        price_data %>%
-        add_moving_avg(window = 100) %>% 
-        filter(close >= MA100) %>% 
+    if ( (max_date - start_date) > ma_window ) {
+      res <- price_data %>%
+        add_moving_avg(window = ma_window) %>% 
+        filter( close >= !!sym(paste0("MA", ma_window)) ) 
+    }
+    else{ stop(paste("You need more than", ma_window, "days.")) }
+    
+  
+  }
+  else{ res <- price_data }
+  
+  
+  if (rsi_type %in% colnames(price_data)){
+    
+    if (rsi_type == "RSI"){
+      res <- res %>% 
         mutate(
           RSIBuy = case_when(
-            RSI < lower_thresold ~ 1, 
+            RSI < 30 ~ 1, 
             TRUE ~ 0
           ), 
           RSISell = case_when(
-            RSI > upper_thresold ~ 1, 
+            RSI > 70 ~ 1, 
             TRUE ~ 0
           )
         )
     }
     
     else{
-      stop("You need to calculate RSI.")
+      if (rsi_type == "stochRSI"){
+        res <- res %>% 
+          mutate(
+            stochRSIBuy = case_when(
+              stochRSI < 20 ~ 1, 
+              TRUE ~ 0
+            ), 
+            stochRSISell = case_when(
+              stochRSI > 80 ~ 1, 
+              TRUE ~ 0
+            )
+          )
+      }
+      else{ stop("rsi_type takes the value 'RSI' or 'stochRSI'.") }
     }
-    
-  }
   
-  else{
-    stop(paste("You need more than", ma_window, "days."))
   }
+  else{ stop(paste("You need more than", ma_window, "days.")) }
+  
+  return(res)
   
 }
 
@@ -1070,12 +1112,12 @@ plot_evolution <- function(
            xaxis = list(rangeslider = list(visible = F), 
                         rangeselector = range_selector_period(y_pos = -0.1), 
                         title = ""),
-           yaxis = list(domain = c(0.45, 1),
+           yaxis = list(domain = c(0.4, 1),
                         fixedrange = FALSE,
                         tickfont = list(color = evolution), 
                         title = list(text = "€",
                                      font = list(color = "#76787B"))), 
-           yaxis2 = list(domain = c(0, 0.35),
+           yaxis2 = list(domain = c(0, 0.3),
                          fixedrange = FALSE, 
                          tickfont = list(color = macd), 
                          title = ""), 
@@ -1123,7 +1165,7 @@ plot_portfolio_composition <- function(assets_weights){
 
 # --- Indicators
 
-plotly_layout <- function(plotly_obj, title.x = "", title.y){
+plotly_layout <- function(plotly_obj, title.x = "", title.y, show_grid = T){
   "Customize plotly layout."
   
   p_layout <- plotly_obj %>%
@@ -1132,12 +1174,12 @@ plotly_layout <- function(plotly_obj, title.x = "", title.y){
       xaxis = list( rangeslider = list(visible = F), 
                     title = list(text = title.x,
                                  font = list(color = "#76787B")), 
-                    showgrid = T ),
+                    showgrid = show_grid ),
       
       yaxis = list( fixedrange = FALSE, 
                     title = list(text = title.y,
                                  font = list(color = "#76787B")), 
-                    showgrid = T )
+                    showgrid = show_grid )
       
     ) 
   
@@ -1244,8 +1286,7 @@ volume_chart <- function(data){
             name = "Volume",
             color = ~direction,
             colors = c(low, high), 
-            opacity = .6) %>%
-    layout(showlegend = F)
+            opacity = .6)
 }
 
 obv_chart <- function(plotly_obj){
@@ -1296,25 +1337,43 @@ macd_chart <- function(plotly_obj){
   
 }
 
-rsi_chart <- function(plotly_obj){
+rsi_chart <- function(plotly_obj, trace_name = "RSI"){
   "Build plotly chart for RSI signal and bounds."
+  
+  lower <- if_else(trace_name == "RSI", 
+                   30, 
+                   20)
+  upper <- if_else(trace_name == "RSI", 
+                   70, 
+                   80)
+  bounds_trace_col <- if_else(trace_name == "RSI", 
+                             "red", 
+                             "black")
+  
+  lower_trace_name <- paste("Lower", trace_name)
+  upper_trace_name <- paste("Upper", trace_name)
   
   p <- plotly_obj %>%
     add_trace(type = "scatter", 
               mode = "lines",
               marker = NULL,
               x = ~date,
-              y = ~RSI,
-              name = "RSI",
-              line = list(color = rsi,
-                          width = 1.2)) %>%
+              y = paste0("~", trace_name) %>% as.formula(),
+              name = trace_name,
+              line = list( color = if_else(trace_name == "RSI", 
+                                           rsi,
+                                           stoch_rsi), 
+                           width = 1.2, 
+                           dash = if_else(trace_name == "RSI", 
+                                          "plain", 
+                                          "dot")) ) %>%
     add_trace(type = "scatter", 
               mode = "lines",
               marker = NULL,
               x = c(~min(date), ~max(date)),
-              y = c(70,70),
-              name = "RSI (70)",
-              line = list(color = "red",
+              y = c(upper, upper),
+              name = upper_trace_name, 
+              line = list(color = bounds_trace_col,
                           width = 0.5,
                           dash = "dot"), 
               showlegend = F) %>%
@@ -1322,9 +1381,9 @@ rsi_chart <- function(plotly_obj){
               mode = "lines",
               marker = NULL,
               x = c(~min(date), ~max(date)),
-              y = c(30,30),
-              name = "Lower RSI (30)",
-              line = list(color = "red",
+              y = c(lower, lower),
+              name = lower_trace_name, 
+              line = list(color = bounds_trace_col,
                           width = 0.5,
                           dash = "dot"), 
               showlegend = F)
@@ -1344,13 +1403,10 @@ financialDataViz <- function(data, ticker, indicators = c("Volume", "MACD", "RSI
       plotly_layout(title.y = "€")
   )
   
-  plot_heights <- c(.4)
-  
   if ("Volume" %in% indicators){
     plot_list[["volume"]] <- data %>%
       volume_chart() %>% 
       plotly_layout(title.y = "Volume")
-    plot_heights <- c(plot_heights, .15)
   }
   
   if ("OBV" %in% indicators){
@@ -1358,28 +1414,35 @@ financialDataViz <- function(data, ticker, indicators = c("Volume", "MACD", "RSI
       plot_ly() %>% 
       obv_chart() %>% 
       plotly_layout(title.y = "") 
-    plot_heights <- c(plot_heights, .15)
   }
   
   if ("MACD" %in% indicators){
     plot_list[["MACD"]] <- data %>%
       plot_ly() %>% 
       macd_chart() %>%
-      plotly_layout(title.y = "")
-    plot_heights <- c(plot_heights, .15)
+      plotly_layout(title.y = "", show_grid = F)
   }
   
   if ("RSI" %in% indicators){
     plot_list[["RSI"]] <- data %>%
       plot_ly() %>% 
       rsi_chart() %>%
-      plotly_layout(title.y = "")
-    plot_heights <- c(plot_heights, .15)
+      rsi_chart(trace_name = "stochRSI") %>% 
+      plotly_layout(title.y = "", show_grid = F)
   }
   
+  plot_heights <- list(
+    "1" = c(.95), 
+    "2" = c(.7, .25), 
+    "3" = c(.55, .2, .2), 
+    "4" = c(.5, .15, .15, .15), 
+    "5" = c(.35, .15, .15, .15 , .15 )
+  )
+  n_plots <- length(plot_list)
+  
   fig <- subplot(plot_list,
-                 heights = plot_heights, 
-                 nrows = length(plot_list),
+                 heights = plot_heights[[n_plots %>% as.character()]], 
+                 nrows = n_plots,
                  shareX = TRUE, 
                  titleY = TRUE) %>% 
     layout(title = "", 
@@ -1426,58 +1489,60 @@ plot_cor_mat <- function(cor_mat, p_mat = NULL){
 add_indicators <- function(
   price_dat, 
   start_date, 
+  indicators, 
   ema_short = 12, 
   ema_long = 26, 
   macd_signal = 9, 
-  rsi_period = 10
+  rsi_period = 14
 ){
-  "Add MACD, RSI and signals to price data."
+  "Add MACD, RSI and stochRSI to price data."
   
-  price_dat %>% 
-    filter(date >= start_date) %>%
-    add_macd(ema_short = ema_short, 
-             ema_long = ema_long, 
-             signal = macd_signal) %>%
-    get_macd_signals() %>% 
-    add_rsi(rsi_period = rsi_period) %>% 
-    get_rsi_signals()
+  res <- price_dat %>% 
+    filter(date >= start_date) 
+  
+  if ("MACD" %in% indicators){
+    res <- res %>%
+      add_macd(ema_short = ema_short, 
+               ema_long = ema_long, 
+               signal = macd_signal)
+  }
+  
+  if ( "RSI" %in% indicators | "stochRSI" %in% indicators ){
+    res <- res %>% 
+      add_rsi(rsi_period = rsi_period)
+  }
+     
+  if ("stochRSI" %in% indicators){
+    res <- res %>%
+      add_stochRsi()
+  }
+  
+  return(res)
   
 }
 
 ## Potential buying points ------------------------------------------------------------------
 
-return_buying_points <- function(indicators_dat, criterion = "MACD"){
-  "Return buying points based on a criterion (MACD, RSI, both)."
+return_buying_points <- function(indicators_dat, indicators){
+  "Return buying points based on multiple indicators (MACD, RSI, stochRSI)."
   
-  if (criterion == "MACD"){
-    buying_dat <- indicators_dat %>% 
-      filter(MACDBuy == 1) %>% 
-      select(date:MACDHist)
+  buying_dat <- indicators_dat
+  
+  if ("MACD" %in% indicators){
+    buying_dat <- buying_dat %>% get_macd_signals()
   }
   
-  else{
-    
-    if (criterion == "RSI"){
-      buying_dat <- indicators_dat %>% 
-        filter(RSIBuy == 1) %>% 
-        select(c(date:adjusted, RSI))
-    }
-    
-    else{
-      
-      if (criterion == "MACD+RSI"){
-        buying_dat <- indicators_dat %>%
-          filter(MACDBuy == 1 & RSIBuy == 1) %>% 
-          select(c(date:MACDHist, RSI))
-      }
-      
-      else{
-        stop("'criterion' must take on of the following values: 'MACD', 'RSI', 'MACD+RSI'.")
-      }
-      
-    }
-    
+  if ("RSI" %in% indicators){
+    buying_dat <- buying_dat %>% get_rsi_signals()
   }
+  
+  if ("stochRSI" %in% indicators){
+    buying_dat <- buying_dat %>% get_rsi_signals(rsi_type = "stochRSI")
+  }
+  
+  buying_dat <- buying_dat %>%
+    mutate( TotalBuy = select(., contains("Buy")) %>% rowSums() ) %>%
+    filter(TotalBuy == length(indicators)) 
   
   return(buying_dat)
   
@@ -1485,47 +1550,38 @@ return_buying_points <- function(indicators_dat, criterion = "MACD"){
 
 return_last_signal_point <- function(signal_points_dat){
   "Return the last buying point for a given stock."
+  
   signal_points_dat %>% 
-    filter(date == today())
+    filter( date == if_else(max(date) == today(), 
+                            today(), 
+                            today() - days(1)) )
 }
 
 
 ## Potential selling points -----------------------------------------------------------------
 
-return_selling_points <- function(indicators_dat, criterion = "MACD"){
-  "Return selling points based on a criterion (MACD, RSI, both)."
+return_selling_points <- function(indicators_dat, indicators){
+  "Return selling points based on multiple indicators (MACD, RSI, both)."
   
-  if (criterion == "MACD"){
-    buying_dat <- indicators_dat %>% 
-      filter(MACDSell == 1) %>% 
-      select(date:MACDHist)
+  selling_dat <- indicators_dat
+  
+  if ("MACD" %in% indicators){
+    selling_dat <- selling_dat %>% get_macd_signals()
   }
   
-  else{
-    
-    if (criterion == "RSI"){
-      buying_dat <- indicators_dat %>% 
-        filter(RSISell == 1) %>% 
-        select(c(date:adjusted, RSI))
-    }
-    
-    else{
-      
-      if (criterion == "MACD+RSI"){
-        buying_dat <- indicators_dat %>%
-          filter(MACDSell == 1 & RSISell == 1) %>% 
-          select(c(date:MACDHist, RSI))
-      }
-      
-      else{
-        stop("'criterion' must take on of the following values: 'MACD', 'RSI', 'MACD+RSI'.")
-      }
-      
-    }
-    
+  if ("RSI" %in% indicators){
+    selling_dat <- selling_dat %>% get_rsi_signals()
   }
   
-  return(buying_dat)
+  if ("stochRSI" %in% indicators){
+    selling_dat <- selling_dat %>% get_rsi_signals(rsi_type = "stochRSI")
+  }
+  
+  selling_dat <- selling_dat %>%
+    mutate( TotalSell = select(., contains("Sell")) %>% rowSums() ) %>%
+    filter(TotalSell == length(indicators)) 
+  
+  return(selling_dat)
   
 }
 
@@ -1557,8 +1613,8 @@ stock_recommender <- function(
   ema_short = 12, 
   ema_long = 26, 
   macd_signal = 9, 
-  rsi_period = 10, 
-  criterion = "MACD",
+  rsi_period = 14, 
+  indicators = c("MACD"),
   num_shares = NULL,  
   buying_dates = NULL
 ){
@@ -1568,9 +1624,10 @@ stock_recommender <- function(
     if (action == "Buy"){
       
       dat <- indicators_dat %>%
-        return_buying_points(criterion = criterion) %>% 
+        return_buying_points(indicators = indicators)
+      dat <- dat %>% 
         return_last_signal_point()
-      
+    
       return(dat)
     }
     
@@ -1585,13 +1642,14 @@ stock_recommender <- function(
         
         if (ticker %in% my_tickers){
           dat <- indicators_dat %>%
-            return_selling_points(criterion = criterion) 
+            return_selling_points(indicators = indicators) 
           
           if (nrow(dat) > 0){
             dat <- dat %>% 
               add_returns(buying_date = buying_dates[ticker], 
                           num_shares = num_shares[ticker]) %>% 
               return_last_signal_point()
+            
             return(dat)
           }
         }
@@ -1613,6 +1671,7 @@ stock_recommender <- function(
                     pull(ticker)
                   dat %>%
                     add_indicators(start_date = start_date, 
+                                   indicators = indicators,
                                    ema_short = ema_short, 
                                    ema_long = ema_long, 
                                    macd_signal = macd_signal, 
