@@ -11,13 +11,15 @@ stock_tickers <- c(cac40_assets$tickers,
                    stoxx600_assets$tickers, 
                    dowJ_assets$tickers, 
                    sp100_assets$tickers, 
-                   "COIN")
+                   "COIN", 
+                   "UNI1-EUR")
 
 stock_names <- c(rownames(cac40_assets), 
                  rownames(stoxx600_assets),
                  rownames(dowJ_assets), 
                  rownames(sp100_assets), 
-                 "COINBASE") 
+                 "COINBASE", 
+                 "UNISWAP") 
 
 names(stock_tickers) <- stock_names
 
