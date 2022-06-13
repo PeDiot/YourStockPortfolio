@@ -108,8 +108,8 @@ ui <- fluidPage(
                                               infoBoxOutput("port_last_cumret")), 
                                      hr(), 
                                      div(plotlyOutput("portfolio_evolution", 
-                                                      height = 610, 
-                                                      width = 750),
+                                                      height = 620, 
+                                                      width = 900),
                                          align = "center")),
                             
 ## portfolio composition ---------------------------------------------------------
@@ -200,7 +200,7 @@ ui <- fluidPage(
                                       width = "200px", 
                                       choices = c("Volume", "MACD", "RSI", "OBV"), 
                                       multiple = T, 
-                                      selected = c("Volume", "MACD", "RSI"), 
+                                      selected = c("Volume", "RSI"), 
                                       options = list(`live-search` = TRUE)),
                           br(), 
                           br(), 
@@ -234,8 +234,8 @@ ui <- fluidPage(
                                                             width = 4)), 
                                      hr(), 
                                      div(plotlyOutput("asset_evolution", 
-                                                      height = 610, 
-                                                      width = 750),
+                                                      height = 620, 
+                                                      width = 900),
                                          align = "center")),
                             tabPanel("Indicators",
                                      div(plotlyOutput("financial_data_viz", 
@@ -358,11 +358,11 @@ ui <- fluidPage(
                     br(), 
                     br(), 
                     br(), 
-                    pickerInput("reco_indicator", 
+                    pickerInput("reco_indicators", 
                                 label = h5("Which indicator(s)?", 
                                            style = "color:#76787B;"), 
                                 width = "200px", 
-                                choices = c("MACD", "RSI"),
+                                choices = c("MACD", "RSI", "stochRSI"),
                                 selected = "RSI", 
                                 multiple = T), 
                     br(), 
@@ -383,20 +383,28 @@ ui <- fluidPage(
                   ), 
 
                   mainPanel(
-                    br(),
-                    uiOutput(outputId = "recommendation_tab_title"),
-                    br(),  
-                    div(dataTableOutput(outputId = "recommendation_data"), 
-                        align = "center"), 
-                    br(),
-                    hr(),
-                    h4(strong("Cumulative returns"), 
-                       align = "center", 
-                       style = "color:#76787B;"),
-                    div(plotlyOutput("recommendation_chart", 
-                                     height = 350, 
-                                     width = 700), 
-                        align = "center")
+                    
+                    tabsetPanel(
+                      
+                      tabPanel(title = "Table", 
+                               br(),
+                               uiOutput(outputId = "recommendation_tab_title"),
+                               br(),  
+                               div(dataTableOutput(outputId = "recommendation_data"), 
+                                   align = "center")), 
+                      
+                      tabPanel(title = "Returns", 
+                               br(),
+                               h4(strong("Cumulative returns"), 
+                                  align = "center", 
+                                  style = "color:#76787B;"),
+                               div(plotlyOutput("recommendation_chart", 
+                                                height = 600, 
+                                                width = 900), 
+                                   align = "center"))
+                      
+                    )
+                    
                   )
                   
                 )

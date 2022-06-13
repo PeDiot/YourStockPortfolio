@@ -1,3 +1,20 @@
+# Data --------------------------------------------------------------------
+
+date_init <- today() - years(3)
+
+yf_data <- get_tq_data(tickers = symbols$tickers, start_date = date_init)
+
+yf_data[usd_tickers] <- lapply(
+  
+  X = yf_data[usd_tickers], 
+  
+  FUN = function(d){
+    d %>%
+      mutate_at(vars(open:close), usd_to_euros)
+  }
+  
+)
+
 server <- function(input, output, session) {
   
 
@@ -217,13 +234,14 @@ output$auth_output <- renderPrint({
       req(input$indicator)
       
 ## asset data with indicators --------------------------------------------------------------
-      prices <- assets_value_list[[input$ticker_fin_analysis]] %>%
+      prices <- yf_data[[input$ticker_fin_analysis]] %>%
         filter( date >= input$start_date_fin_analysis) %>%
         add_moving_avg(window = 20) %>%
         add_moving_avg(window = 50) %>%
         add_moving_avg(window = 100) %>%
         add_macd() %>%
         add_rsi() %>% 
+        add_stochRsi() %>% 
         add_obv() %>% 
         add_price_direction()
       
@@ -239,11 +257,11 @@ output$auth_output <- renderPrint({
       
 ## asset global evolution --------------------------------------------------------------
       output$asset_evolution <- renderPlotly({
-        plot_evolution(price_dat = prices %>%
-                         dplyr::select(c(date, close)) %>%
+        plot_evolution(price_dat = prices %>% 
                          rename(value = close), 
                        cum_ret_dat = asset_cumret, 
-                       ticker = input$ticker_fin_analysis)
+                       ticker = input$ticker_fin_analysis, 
+                       with_ma = T)
       })
       
 ## asset last price --------------------------------------------------------------
@@ -407,30 +425,24 @@ output$auth_output <- renderPrint({
 # stock recommender --------------------------------------------------------------
       
       observeEvent(
-        c(input$reco_indicator, 
+        c(input$reco_indicators, 
           input$recommendation_start_date, 
           input$action), 
         
         {
           
-          req(input$reco_indicator)
+          req(input$reco_indicators)
           req(input$recommendation_start_date)
           req(input$action)
           
 ## compute recommendations --------------------------------------------------------------
-          if (length(input$reco_indicator) == 2){
-            criterion <- "MACD+RSI"
-          }
-          else{
-            criterion <- input$reco_indicator
-          }
-          
           recommendation <- stock_recommender(stock_data = yf_data, 
                                               action = input$action,       
                                               start_date = input$recommendation_start_date, 
-                                              criterion = criterion, 
+                                              indicators = input$reco_indicators, 
                                               num_shares = my_num_shares, 
                                               buying_dates = my_buying_dates) 
+          
           recommended_tickers <- recommendation$ticker 
           
 ## recommended stocks table --------------------------------------------------------------
@@ -440,14 +452,17 @@ output$auth_output <- renderPrint({
                                     sym <- symbols %>% filter(tickers == x) %>% rownames()
                                     paste0(sym, " (", x, ")")
                                   }) %>% unlist()
+            
             recommendation %>% 
+              select( -c( contains("Buy") | contains("Sell") ) ) %>% 
               mutate(ticker = new_tickers) %>% 
               format_table_numbers() %>% 
               select(-date) %>% 
-              rename_at( vars( !contains("MACD") & !contains("RSI") ), str_to_title )
+              rename_at( vars( !contains("MA") & !contains("RSI") ), str_to_title )
+            
           }, 
-          options = list(pageLength = 3,
-                         lengthMenu = c(1, 3, 5)) 
+          options = list(pageLength = 5,
+                         lengthMenu = c(5, 10, 20)) 
           )
           
 ## recommendation table title --------------------------------------------------------------
@@ -491,8 +506,7 @@ output$auth_output <- renderPrint({
                 cumrets %>%
                   plot_ly() %>%
                   plot_cumulative_returns(multiple = T,
-                                          legend_group = NULL) %>% 
-                  layout(showlegend = F)
+                                          legend_group = NULL)  
               }
             }
             
