@@ -7,20 +7,26 @@ load(file = "sp100_assets.RData")
 
 # Stocks ------------------------------------------------------------------
 
-stock_tickers <- c(cac40_assets$tickers, 
-                   stoxx600_assets$tickers, 
-                   dowJ_assets$tickers, 
-                   sp100_assets$tickers, 
-                   "COIN", 
-                   "UNI1-EUR")
+stock_tickers_ <- structure(list(
+  tickers = c(cac40_assets$tickers, 
+              stoxx600_assets$tickers, 
+              dowJ_assets$tickers, 
+              sp100_assets$tickers, 
+              "COIN",
+              "UNI1-EUR")
+),
+  class = "data.frame", 
+  row.names = c(rownames(cac40_assets), 
+                rownames(stoxx600_assets),
+                rownames(dowJ_assets), 
+                rownames(sp100_assets), 
+                "COINBASE", 
+                "UNISWAP") 
+) %>% 
+  distinct(tickers, .keep_all = T) 
 
-stock_names <- c(rownames(cac40_assets), 
-                 rownames(stoxx600_assets),
-                 rownames(dowJ_assets), 
-                 rownames(sp100_assets), 
-                 "COINBASE", 
-                 "UNISWAP") 
-
+stock_tickers <- stock_tickers_$tickers
+stock_names <- rownames(stock_tickers_)
 names(stock_tickers) <- stock_names
 
 # Crypto ------------------------------------------------------------------
@@ -66,7 +72,6 @@ names(crypto_tickers) <- crypto_names
 
 # ETFs ------------------------------------------------------------------
 
-
 etf_tickers <- c("^FCHI", 
                  "^GSPC") 
 
@@ -89,9 +94,9 @@ symbols <- structure(list(
 ) %>% 
   distinct(tickers, .keep_all = T) 
 
-
 # My assets ------------------------------------------------------------------
 
+## Tickers in the portfolio ------------------------------------------------------------------
 my_tickers <- c("BTC-EUR", 
                 "ETH-EUR", 
                 "MATIC-EUR", 
@@ -101,38 +106,60 @@ my_tickers <- c("BTC-EUR",
                 "FB", 
                 "NVDA")
 
-my_tickers_ix <- lapply(
-  X = 1:nrow(symbols), 
-  FUN = function(ix){
-    if (symbols[ix, "tickers"] %in% my_tickers){
-      return(ix)
-    }
-  }
-) %>% unlist()
+my_tickers_ix <- symbols %>%
+  mutate(idxs = 1:nrow(.)) %>% 
+  filter(tickers %in% my_tickers) %>%
+  pull(idxs)
 
 names(my_tickers) <- symbols[my_tickers_ix, ] %>%
   names()
 
-my_buying_dates <- c("2022-03-02", 
-                     "2022-02-02", 
-                     "2022-02-03", 
-                     "2022-03-02", 
-                     "2022-03-29",
-                     "2022-04-08", 
-                     "2022-05-17", 
-                     "2022-05-30")
-names(my_buying_dates) <- my_tickers
+## Transactions ------------------------------------------------------------------
 
-my_num_shares <- c(0.00037241, 
-                   0.00594658, 
-                   10.8270573, 
-                   10.8270573, 
-                   0.10934065, 
-                   0.15021685, 
-                   0.20416538, 
-                   0.22274457)
+btc_tickers <- lapply(X = 1:4, FUN = function(i) paste("BTC-EUR", i, sep = "_")) %>% unlist()
+amzn_tickers <- lapply(X = 1:2, FUN = function(i) paste("AMZN", i, sep = "_")) %>% unlist()
 
-names(my_num_shares) <- my_tickers
+my_tickers_tx <- c(btc_tickers, 
+                   "ETH-EUR", 
+                   "MATIC-EUR", 
+                   "MANA-EUR", 
+                   "COIN", 
+                   amzn_tickers, 
+                   "FB", 
+                   "NVDA")
+
+my_buying_dates <- c(
+  "2022-03-02", 
+  "2022-05-30", 
+  "2022-06-06", 
+  "2022-06-13", 
+  "2022-02-02", 
+  "2022-02-03", 
+  "2022-03-02", 
+  "2022-03-29",
+  "2022-04-08", 
+  "2022-06-16", 
+  "2022-05-17", 
+  "2022-05-30"
+)
+names(my_buying_dates) <- my_tickers_tx
+
+my_num_shares <- c(
+  0.00037241, 
+  0.00041181, 
+  0.00025110, 
+  0.00031765, 
+  0.00594658, 
+  10.8270573, 
+  5.77722346, 
+  0.10934065, 
+  0.15021685, 
+  0.04869812, 
+  0.20416538, 
+  0.22274457
+)
+
+names(my_num_shares) <- my_tickers_tx
 
 
 # USD assets ------------------------------------------------------------------
