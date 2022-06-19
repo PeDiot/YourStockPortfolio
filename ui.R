@@ -90,7 +90,7 @@ ui <- fluidPage(
                           HTML("<ul><li>Coinbase (Lydia)</li><li>Amazon (Lydia)</li><li>Meta Platforms (Lydia)</li><li>Nvidia (Lydia)</li></ul>"),
                           br(), 
                           h5(strong("Cryptocurrencies")), 
-                          HTML("<ul><li>Bitcoin (Lydia & Bitstack)</li><li>Ethereum (Binance)</li><li>Polygon MATIC (Metamask)</li><li>Decentraland MANA (Lydia)</li></ul>"),
+                          HTML("<ul><li>Bitcoin (Binance & Lydia)</li><li>Ethereum (Binance)</li><li>Polygon MATIC (Wallet)</li><li>Decentraland MANA (Lydia)</li></ul>"),
       
                         ), 
                         
@@ -102,10 +102,9 @@ ui <- fluidPage(
                             tabPanel("Overview",
                                      br(), 
                                      br(),
-                                     fluidRow(column(width = 2), 
-                                              infoBoxOutput("port_last_val"),
-                                              column(width = 1), 
-                                              infoBoxOutput("port_last_cumret")), 
+                                     fluidRow(infoBoxOutput("total_invest", width = 4), 
+                                              infoBoxOutput("port_last_cumret", width = 4),
+                                              infoBoxOutput("port_last_val", width = 4)), 
                                      hr(), 
                                      div(plotlyOutput("portfolio_evolution", 
                                                       height = 620, 
@@ -129,15 +128,15 @@ ui <- fluidPage(
                                         style = "color:#76787B;"),
                                      br(), 
                                      fluidRow(column(width = 2), 
-                                              infoBoxOutput("best_asset_cumret"),
+                                              infoBoxOutput("best_asset"),
                                               column(width = 1), 
-                                              infoBoxOutput("worst_asset_cumret"))), 
+                                              infoBoxOutput("worst_asset"))), 
 
 ## correlations ---------------------------------------------------------
 
                               tabPanel("Correlations", 
                                        br(), 
-                                       h4(strong("Correlations between assets' returns"), 
+                                       h4(strong("Correlations between your assets"), 
                                           align = "center", 
                                           style = "color:#76787B;"), 
                                        br(), 
@@ -160,9 +159,9 @@ ui <- fluidPage(
                                          " for more details.")),
 
 ## portfolio infos ---------------------------------------------------------
-                              tabPanel("Infos", 
+                              tabPanel("Transactions", 
                                        br(),
-                                       div(dataTableOutput(outputId = "port_info"), 
+                                       div(dataTableOutput(outputId = "tx_table"), 
                                            align = "center")), 
 
 ## portfolio data ---------------------------------------------------------
@@ -217,7 +216,17 @@ ui <- fluidPage(
                                       options = list(`live-search` = TRUE)),
                           br(), 
                           br(), 
-                          uiOutput(outputId = "start_date_fin_analysis_out")
+                          airDatepickerInput(
+                            inputId = "start_date_fin_analysis",
+                            label = h5("How far back do you want to go?", 
+                                       style = "color:#76787B;"),
+                            value = today() - months(3),
+                            minDate = date_init, 
+                            maxDate = today() - days(35),
+                            width = "200px",
+                            placeholder = "",
+                            multiple = F, 
+                            clearButton = F)
                         ),
                         
                         ## financial data viz ---------------------------------------------------------
@@ -279,7 +288,17 @@ ui <- fluidPage(
                    br(), 
                    br(), 
                    br(), 
-                   uiOutput(outputId = "start_date_dat_out"),
+                   airDatepickerInput(
+                     inputId = "start_date_dat",
+                     label = h5("How far back do you want to go?", 
+                                style = "color:#76787B;"),
+                     value = today() - months(3),
+                     minDate = date_init, 
+                     maxDate = today() - days(35),
+                     width = "200px",
+                     placeholder = "",
+                     multiple = F, 
+                     clearButton = F),
                    br(), 
                    br(), 
                    br(), 

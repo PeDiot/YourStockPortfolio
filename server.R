@@ -1,5 +1,4 @@
 server <- function(input, output, session) {
-  
 
 # User Authentification ---------------------------------------------------
 res_auth <- secure_server(
@@ -22,13 +21,8 @@ output$auth_output <- renderPrint({
   
 # portfolio --------------------------------------------------------------
       
-    assets_value_list_wid <- compute_assets_value(data = yf_data, num_shares = my_num_shares) 
-    
-    my_assets_value <- my_tickers %>%
-      lapply(FUN = query_assets_since_buying_date, 
-             assets_dat = assets_value_list_wid[my_tickers],
-             buying_dates = my_buying_dates) %>%
-      bind_rows()
+    my_assets_value_list <- compute_assets_value(data = yf_data[my_tickers])
+    my_assets_value <- my_assets_value_list %>% bind_rows()
     
 ## portfolio value --------------------------------------------------------------
     port_value <- get_portfolio_value(my_assets_value)
@@ -38,22 +32,12 @@ output$auth_output <- renderPrint({
       add_moving_avg(window = 50) %>%
       add_moving_avg(window = 100)
     
-    output$port_last_val <- renderInfoBox({
-      val <- get_current_value(data = port_value) 
-      infoBox_last_value(last_val = val)
-      
-    })
-    
 ## portfolio returns --------------------------------------------------------------
-    my_assets_weights <- my_assets_value %>%
-      bind_rows() %>%
-      calculate_assets_weights() %>% 
-      select(c(ticker, value, wts, pct))
+    my_assets_weights <- calculate_assets_weights(my_tickers_tx)
     
-    my_assets_returns <- calculate_multiple_assets_returns(
-      assets_value_list_wid,
-      my_tickers
-    )
+    my_assets_returns <- my_assets_value_list %>% 
+      calculate_multiple_assets_returns(tickers = my_tickers_tx) %>%
+      weight_returns_per_asset()
     
     weighted_returns <- compute_weighted_returns(ret_data = my_assets_returns, 
                                                  wts_dat = my_assets_weights)
@@ -72,7 +56,19 @@ output$auth_output <- renderPrint({
                      with_ma = T) 
     })
     
-    max_date <- max(my_buying_dates)
+    output$total_invest <- renderInfoBox({
+      val <- calculate_total_invested(my_tickers_tx)
+      infoBox_total_invest(val)
+    })
+    
+    output$port_last_val <- renderInfoBox({
+      val <- port_value %>%
+        filter(date == today()) %>%
+        pull(value)
+      infoBox_last_value(last_val = val)
+      
+    })
+    
     output$port_last_cumret <- renderInfoBox({
       last_cumret <- get_current_cumret(port_cumulative_ret)
       infoBox_last_cumret(last_cumret)
@@ -81,11 +77,11 @@ output$auth_output <- renderPrint({
 ## portfolio composition --------------------------------------------------------------
     
 ### best and worst assets --------------------------------------------------------------
-    assets_cumret <- weighted_returns %>%
-      compute_cumulative_returns(all = F, weighted = T)
     
-    best_asset <- get_best_asset(assets_cumret) 
-    worst_asset <- get_worst_asset(assets_cumret) 
+    assets_total_returns <- get_all_assets_total_returns(my_tickers_tx)
+    
+    best_asset <- get_best_asset(assets_total_returns) 
+    worst_asset <- get_worst_asset(assets_total_returns) 
     
 ### data viz --------------------------------------------------------------
     output$portfolio_composition <- renderPlotly({
@@ -93,12 +89,12 @@ output$auth_output <- renderPrint({
         plot_portfolio_composition()
     })
     
-    output$best_asset_cumret <- renderInfoBox({
-      infoBox_asset_cumret(best_asset, type = "best")
+    output$best_asset <- renderInfoBox({
+      infoBox_asset_tot_ret(best_asset, type = "best")
     })
     
-    output$worst_asset_cumret <- renderInfoBox({
-      infoBox_asset_cumret(worst_asset, type = "worst")
+    output$worst_asset <- renderInfoBox({
+      infoBox_asset_tot_ret(worst_asset, type = "worst")
     })
     
 ## correlations -------------------------------------------------------------- 
@@ -106,7 +102,7 @@ output$auth_output <- renderPrint({
 ### calculate correlations btw assets returns --------------------------------------------------------------
     
     my_assets_returns_6m <- calculate_multiple_assets_returns(
-      assets_value_list_wid,
+      yf_data[my_tickers],
       my_tickers,
       start_date = today() - months(6)
     ) %>%
@@ -124,7 +120,7 @@ output$auth_output <- renderPrint({
       cor_pmat(use = "complete.obs")
     
 ### portfolio average correlation --------------------------------------------------------------
-    avg_cor <- calculate_avg_cor(cor_mat, my_assets_weights$wts)
+    avg_cor <- calculate_avg_cor(cor_mat, my_assets_weights)
     
 ### portfolio sharpe ratio --------------------------------------------------------------
     sr <- calculate_sharpeRatio(port_weighted_ret$ret)
@@ -143,10 +139,10 @@ output$auth_output <- renderPrint({
       infoBox_avg_cor(avg_cor)
     })
     
-## portfolio infos --------------------------------------------------------------
+## transactions --------------------------------------------------------------
     
-    port_info <- format_portfolio_info(my_tickers, my_buying_dates, my_num_shares)
-    output$port_info <- renderDataTable( { port_info },
+    tx_table <- create_tx_table(my_tickers_tx, my_buying_dates, my_num_shares)
+    output$tx_table <- renderDataTable( { tx_table },
                                          options = list(pageLength = 10,
                                                         lengthMenu = c(10, 25, 50, 100)) )
     
@@ -169,152 +165,85 @@ output$auth_output <- renderPrint({
 # financial indicators per asset --------------------------------------------------------------
   
     assets_value_list <- compute_assets_value(data = yf_data, 
-                                              num_shares = my_num_shares)    
-  
-## start date financial analysis --------------------------------------------------------------
-  
+                                                num_shares = my_num_shares)    
+    
     observeEvent(
-      input$ticker_fin_analysis, 
+      
+      c(input$ticker_fin_analysis, 
+        input$start_date_fin_analysis,
+        input$indicator),
       {
-        output$start_date_fin_analysis_out <- renderUI({
+        
+        req(input$start_date_fin_analysis)
+        req(input$ticker_fin_analysis)
+        req(input$indicator)
+        
+  ## asset data with indicators --------------------------------------------------------------
+        prices <- yf_data[[input$ticker_fin_analysis]] %>%
+          filter( date >= input$start_date_fin_analysis) %>%
+          add_moving_avg(window = 20) %>%
+          add_moving_avg(window = 50) %>%
+          add_moving_avg(window = 100) %>%
+          add_macd() %>%
+          add_rsi() %>% 
+          add_stochRsi() %>% 
+          add_obv() %>% 
+          add_price_direction()
+        
+        bbands_dat <- calculate_bbands(price_data = prices)
+        prices <- prices %>%
+          add_bbands(bbands_data = bbands_dat)
+        
+  ## asset returns --------------------------------------------------------------
+        daily_ret <- prices %>%
+          compute_daily_returns() 
+        asset_cumret <- daily_ret %>%
+          compute_cumulative_returns(all = F)
+        
+  ## asset global evolution --------------------------------------------------------------
+        output$asset_evolution <- renderPlotly({
+          plot_evolution(price_dat = prices %>% 
+                           rename(value = close), 
+                         cum_ret_dat = asset_cumret, 
+                         ticker = input$ticker_fin_analysis, 
+                         with_ma = T)
+        })
+        
+  ## asset last price --------------------------------------------------------------
+        output$asset_last_price <- renderInfoBox({
+          val <- get_current_price(ticker = input$ticker_fin_analysis)  
+          infoBox_last_price(last_price = val)
           
+        })
+        
+  ## asset number of shares --------------------------------------------------------------
+        output$asset_num_shares <- renderInfoBox({
           if (input$ticker_fin_analysis %in% my_tickers){
-            date <- today() - months(3)
-            if (my_buying_dates[input$ticker_fin_analysis] < date){
-              date <- my_buying_dates[input$ticker_fin_analysis] 
-            }
+            num_shares <- my_num_shares[input$ticker_fin_analysis]
           }
           else{
-            date <- today() %m-% months(6)
+            num_shares <- 0
           }
-          
-          airDatepickerInput(
-            inputId = "start_date_fin_analysis",
-            label = h5("How far back do you want to go?", 
-                       style = "color:#76787B;"),
-            value = date,
-            minDate = date_init, 
-            maxDate = today() - days(35),
-            width = "200px",
-            placeholder = "",
-            multiple = F, 
-            clearButton = F)
-          
+          infoBox_num_shares(num_shares)
+        })
+        
+        
+  ## asset last cumulative returns --------------------------------------------------------------
+        output$asset_last_cumret <- renderInfoBox({
+          last_cumret <- get_current_cumret(asset_cumret)
+          infoBox_last_cumret(last_cumret)
+        })
+        
+  ## indicators data viz --------------------------------------------------------------
+        output$financial_data_viz <- renderPlotly({
+          financialDataViz(prices, input$ticker_fin_analysis, input$indicator) 
         })
         
       }
     )
-  
-  observeEvent(
-    
-    c(input$ticker_fin_analysis, 
-      input$start_date_fin_analysis,
-      input$indicator),
-    {
-      
-      req(input$start_date_fin_analysis)
-      req(input$ticker_fin_analysis)
-      req(input$indicator)
-      
-## asset data with indicators --------------------------------------------------------------
-      prices <- yf_data[[input$ticker_fin_analysis]] %>%
-        filter( date >= input$start_date_fin_analysis) %>%
-        add_moving_avg(window = 20) %>%
-        add_moving_avg(window = 50) %>%
-        add_moving_avg(window = 100) %>%
-        add_macd() %>%
-        add_rsi() %>% 
-        add_stochRsi() %>% 
-        add_obv() %>% 
-        add_price_direction()
-      
-      bbands_dat <- calculate_bbands(price_data = prices)
-      prices <- prices %>%
-        add_bbands(bbands_data = bbands_dat)
-      
-## asset returns --------------------------------------------------------------
-      daily_ret <- prices %>%
-        compute_daily_returns() 
-      asset_cumret <- daily_ret %>%
-        compute_cumulative_returns(all = F)
-      
-## asset global evolution --------------------------------------------------------------
-      output$asset_evolution <- renderPlotly({
-        plot_evolution(price_dat = prices %>% 
-                         rename(value = close), 
-                       cum_ret_dat = asset_cumret, 
-                       ticker = input$ticker_fin_analysis, 
-                       with_ma = T)
-      })
-      
-## asset last price --------------------------------------------------------------
-      output$asset_last_price <- renderInfoBox({
-        val <- get_current_price(data = prices)  
-        infoBox_last_price(last_price = val)
-        
-      })
-      
-## asset number of shares --------------------------------------------------------------
-      output$asset_num_shares <- renderInfoBox({
-        if (input$ticker_fin_analysis %in% my_tickers){
-          num_shares <- my_num_shares[input$ticker_fin_analysis]
-        }
-        else{
-          num_shares <- 0
-        }
-        infoBox_num_shares(num_shares)
-      })
-      
-      
-## asset last cumulative returns --------------------------------------------------------------
-      output$asset_last_cumret <- renderInfoBox({
-        last_cumret <- get_current_cumret(asset_cumret)
-        infoBox_last_cumret(last_cumret)
-      })
-      
-## indicators data viz --------------------------------------------------------------
-      output$financial_data_viz <- renderPlotly({
-        financialDataViz(prices, input$ticker_fin_analysis, input$indicator) 
-      })
-      
-    }
-  )
           
 # data --------------------------------------------------------------
 
-## start date data --------------------------------------------------------------
-  
-    observeEvent(
-      input$ticker_dat,
-      {
-        output$start_date_dat_out <- renderUI({
-          
-          if (input$ticker_dat %in% my_tickers){
-            date <- today() - days(35)
-            if (my_buying_dates[input$ticker_dat] < date){
-              date <- my_buying_dates[input$ticker_dat] 
-            }
-          }
-          else{
-            date <- today() %m-% months(6)
-          }
-          
-          airDatepickerInput(
-            inputId = "start_date_dat",
-            label = h5("How far back do you want to go?", 
-                       style = "color:#76787B;"),
-            value = date,
-            minDate = date_init, 
-            maxDate = today(),
-            width = "200px", 
-            placeholder = "",
-            multiple = F, 
-            clearButton = F)
-          
-        })
-      }
-    )
-  
     observeEvent(
       
       c(input$ticker_dat, 
