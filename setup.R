@@ -73,6 +73,20 @@ get_company_name <- function(ticker){
     filter(tickers == ticker) %>%
     rownames()
 }
+
+extract_ticker <- function(ticker_name){
+  "Extract ticker name in the case of multiple buying points."
+  
+  ticker <- str_split(string = ticker_name, pattern = "_") %>% unlist()
+  
+  if (length(ticker) > 1){
+    ticker <- ticker[1]
+  }
+  
+  return(ticker)
+  
+}
+
 get_asset_last_value <- function(ticker, assets_value){
   "Return ticker's last value given its price and number of shares."
   assets_value[assets_value$ticker == ticker,]$value %>% 
@@ -135,19 +149,6 @@ get_tq_data <- function(tickers, start_date){
   
 }
 
-query_assets_since_buying_date <- function(
-  ticker,
-  assets_dat,
-  buying_dates
-){
-  "Return asset data since buying date."
-  
-  asset_dat <- assets_dat[[ticker]]
-  buying_date <- buying_dates[ticker]
-  asset_dat %>%
-    filter(date >= buying_date)
-  
-}
 
 clean_assets_value <- function(assets_value, portfolio_value){
   "Modify assets value df for vizualisation."
@@ -173,7 +174,7 @@ clean_assets_value <- function(assets_value, portfolio_value){
 }
 
 cumret_to_percent <- function(cr){
-  "Convert floating cumulative return to percent."
+  "Convert floating cumulative returns to percent."
   
   if (cr >= 1){
     pct_cr <- 100*(cr - 1) %>%
@@ -187,67 +188,107 @@ cumret_to_percent <- function(cr){
   
 }
 
+ret_to_percent <- function(tot_ret){
+  "Convert returns to percent."
+  
+  pct_ret <- round(100 * tot_ret, 2)
+  return(pct_ret)
+  
+}
+
+format_number <- function(x){
+  "Render number easier to read."
+  
+  x %>% 
+    round(2) %>%
+    prettyNum(big.mark = ",") 
+  
+}
+
 format_table_numbers <- function(tab){
   "Convert numbers into more friendly format."
   
   tab %>% 
     mutate_if(is.numeric, 
-              round, 
-              digits = 2) %>% 
-    mutate_if(is.numeric, 
-              format, 
-              big.mark = ",",
-              scientific = F) 
+              format_number) 
 }
 
-format_portfolio_info <- function(tickers, buying_dates, num_shares){
-  assets <- lapply(X = my_tickers, get_company_name) %>% unlist()
+get_buying_price <- function(ticker){
+  "Return asset buying price."
+  from <- my_buying_dates[ticker] %>% as.Date()
   
-  buying_prices <- lapply(
-    
-    X = my_tickers, 
-    
-    FUN = function(tick){
-      yf_data[[tick]] %>%
-        filter(date == my_buying_dates[tick]) %>%
-        pull(close)
-    }
-    
-  ) %>% unlist() 
+  yf_data[[ extract_ticker(ticker) ]] %>%
+    filter(date == from) %>% 
+    pull(close)
   
-  current_prices <- lapply(
-    
-    X = my_tickers, 
-    
-    FUN = function(tick){
-      yf_data[[tick]] %>%
-        filter(date == today()) %>%
-        pull(close)
-    }
-    
-  ) %>% unlist()
+}
+
+get_current_price <- function(ticker){
+  "Return asset current price."
   
-  val_returns <- num_shares * (current_prices - buying_prices) %>% 
-    round(2)
+  yf_data[[ extract_ticker(ticker) ]] %>%
+    filter(date == today()) %>% 
+    pull(close)
   
-  pct_returns <- 100 * calculate_total_returns(buying_prices, current_prices) %>%
-    round(2)
+}
+
+get_invested_amount <- function(ticker){
+  "Return invested amount for one asset."
+  
+  price <- get_buying_price(ticker)
+  return(price * my_num_shares[ticker])
+  
+}
+
+get_current_value <- function(ticker){
+  "Compute asset current value given number of shares held."
+  
+  price <- get_current_price(ticker)
+  return(price * my_num_shares[ticker])
+}
+
+calculate_total_invested <- function(tickers){
+  "Return total amount invested in €."
+  
+  val <- lapply(X = tickers, FUN = get_invested_amount) %>% 
+    unlist() %>% 
+    sum()
+  return(val)
+  
+}
+
+create_tx_table <- function(tickers, buying_dates, num_shares){
+  "Create a table to display transactions."
+  
+  assets <- lapply(X = tickers, 
+                   FUN = function(x) extract_ticker(x) %>% 
+                     get_company_name()) %>% unlist()
+  
+  buying_prices <- lapply(X = tickers, FUN = get_buying_price) %>% unlist() 
+  
+  current_prices <- lapply(X = tickers, FUN = get_current_price) %>% unlist()
+  
+  invest_amounts <- lapply(X = tickers, FUN = get_invested_amount) %>% unlist()
+  
+  val_returns <- round( num_shares * (current_prices - buying_prices), 2 )
+  
+  pct_returns <- round( 100 * calculate_total_returns(buying_prices, current_prices), 2 ) 
   
   data.frame(buying_dates = buying_dates,
              assets = assets, 
              num_shares = num_shares, 
              buying_prices = buying_prices, 
              current_prices = current_prices,
+             invest_amounts = invest_amounts, 
              val_returns = val_returns, 
              pct_returns = pct_returns) %>% 
-    mutate_at( vars(val_returns:pct_returns), as.character ) %>% 
-    format_table_numbers() %>%
-    mutate_at( vars(val_returns:pct_returns), as.numeric ) %>% 
+    mutate_at( vars(buying_prices:invest_amounts), format_number ) %>% 
     rename(`Buying date` = buying_dates, 
-           Asset = assets, 
+            Asset = assets, 
            `Number of shares` = num_shares, 
            `Buying price (€)` = buying_prices, 
            `Current price (€)` = current_prices, 
+           `Invested amount (€)` = invest_amounts, 
            `€ Returns` = val_returns, 
            `% Returns` = pct_returns) %>%
     as.data.frame(row.names = 1:nrow(.)) %>% 
@@ -266,22 +307,36 @@ usd_to_euros <- function(usd_val){
 
 # Value -------------------------------------------------------
 
-compute_assets_value <- function(data, num_shares){
-  "Return assets' value given prices and number of shares."
+compute_assets_value <- function(
+  data,
+  tickers = my_tickers_tx, 
+  buying_dates = my_buying_dates, 
+  num_shares = my_num_shares, 
+  start_date = NULL
+){
+  "Return assets value given prices and number of shares from start date or buying date."
   
   res <- lapply(
-    data, 
-    function(df){
-      ticker <- df %>%
-        pull(ticker) %>%
-        unique()
-      n <- nrow(df)
+    
+    tickers, 
+    
+    function(ticker){
+      
+      df <- data[[extract_ticker(ticker)]]
       n_shares <- num_shares[ticker]
+      from <- ifelse(is.null(start_date), 
+                     buying_dates[ticker], 
+                     start_date) 
+      
       df %>%
-        mutate(n_shares = rep(n_shares, n)) %>%
-        mutate(value = close * n_shares) 
+        filter( date >= from ) %>% 
+        mutate( n_shares = rep(n_shares, nrow(.)) ) %>%
+        mutate( value = close * n_shares ) 
+      
     }
   ) 
+  
+  names(res) <- tickers
   
   return(res) 
   
@@ -296,45 +351,39 @@ get_portfolio_value <- function(assets_value){
   
 }
 
-get_current_value <- function(data){
-  "Return value (price * number of shares) at last date." 
+calculate_assets_weights <- function(tickers){
+  "Calculate each asset's weights in the portfolio based on amount invested."
   
-  data %>%
-    filter(date == max(date)) %>%
-    head(n = 1) %>%
-    pull(value) %>%
-    round(2) %>%
-    format(big.mark = ",", 
-           decimal.mark = ".", 
-           scientific = F)
-}
-
-get_current_price <- function(data){
-  "Return price at last date." 
+  invests <- lapply(X = tickers, FUN = get_invested_amount) %>% unlist()
+  total_invest <- invests %>% sum()
+  current_vals <- lapply(X = tickers, FUN = get_current_value) %>% unlist()
+  total_val <- current_vals %>% sum()
   
-  data %>%
-    filter(date == max(date)) %>%
-    head(n = 1) %>%
-    pull(close) %>%
-    round(2) %>%
-    format(big.mark = ",", 
-           decimal.mark = ".", 
-           scientific = F)
-}
-
-calculate_assets_weights <- function(assets_value){
-  "Calculate each asset's weights in the portfolio."
-  
-  d <- assets_value %>%
-    filter(date == max(date)) %>%
-    mutate(ticker = as.factor(ticker)) %>%
-    mutate(asset = lapply(ticker, get_company_name))
-  tot_val <- sum(d$value)
-  d <- d %>%
-    mutate(wts = value / tot_val) %>% 
-    mutate(pct = 100*wts)
+  d <- data.frame(
+    ticker = lapply(X = tickers, FUN = extract_ticker) %>% unlist(), 
+    invests = invests,
+    value = current_vals, 
+    row.names = 1:length(tickers)
+  ) %>%
+    group_by(ticker) %>% 
+    summarise_at( vars(invests, value), sum ) %>% 
+    mutate(wts = invests / total_invest, 
+           wts_val = value / total_val) %>%
+    mutate(pct = 100*wts, 
+           pct_val = 100*wts_val)
   
   return(d)
+  
+}
+
+compute_tx_weight <- function(ticker){
+  "Return transaction weight in the total number of shares held for a given asset."
+  num_shares <- my_num_shares[ticker]
+  mask <- str_detect( string = my_tickers_tx, pattern = extract_ticker(ticker) )
+  S_weights <- my_num_shares[mask] %>% sum()
+  
+  return( num_shares / S_weights )
+  
 }
 
 # Assets performance -------------------------------------------------------
@@ -343,6 +392,35 @@ calculate_total_returns <- function(p0, p1){
   r <- (p1 - p0) / p0
   return(r)
 }
+
+get_all_assets_total_returns <- function(tickers){
+  "Calculate each asset total returns."
+  
+  d <- data.frame(
+    
+    ticker = tickers, 
+    
+    tot_ret = lapply(
+      X = tickers, 
+      FUN = function(ticker) calculate_total_returns( p0 = get_buying_price(ticker),
+                                                      p1 = get_current_price(ticker) )
+    ) %>% unlist(), 
+    
+    row.names = 1:length(tickers)
+    
+  ) 
+  
+  d %>% 
+    mutate(ticker_ = lapply(ticker, extract_ticker) %>% unlist()) %>%
+    group_by(ticker_) %>%
+    mutate( tot_ret = weight_tx_returns(ticker, tot_ret) ) %>% 
+    summarise(tot_ret = sum(tot_ret)) %>% 
+    ungroup() %>%
+    rename(ticker = ticker_) %>%
+    relocate(ticker, .before = tot_ret)
+  
+}
+
 
 compute_daily_returns <- function(asset_dat, portfolio_dat = NULL){
   "Calculate the daily returns and for our assets."
@@ -387,6 +465,29 @@ compute_daily_returns <- function(asset_dat, portfolio_dat = NULL){
   
 }
 
+weight_tx_returns <-  function(tx, tot_returns){
+  "Weight transaction returns for a given asset."
+  
+  wt <- compute_tx_weight(ticker = tx)
+  wt_tot_returns <- wt * tot_returns 
+  return(wt_tot_returns)
+  
+}
+
+weight_returns_per_asset <- function(returns_data){
+  "Weight returns for asset with multiple buying points."
+  
+  returns_data %>%
+    mutate(ticker_ = lapply(ticker, extract_ticker) %>% unlist()) %>%
+    group_by(ticker) %>%
+    mutate( ret = weight_tx_returns(ticker, ret) ) %>% 
+    ungroup() %>%
+    select(-ticker) %>% 
+    rename(ticker = ticker_) %>%
+    relocate(ticker, .before = date)
+  
+}
+
 compute_weighted_returns <- function(ret_data, wts_dat){
   "Calculate the weighted average of our asset returns."
   ret_data <- left_join(x = ret_data,
@@ -423,7 +524,7 @@ compute_cumulative_returns <- function(ret_data, all = T, weighted = F){
 }
 
 calculate_multiple_assets_returns <- function(
-  assets_value_list, 
+  data_list, 
   tickers = my_tickers,
   start_date = NULL
 ){
@@ -431,9 +532,11 @@ calculate_multiple_assets_returns <- function(
   
   if ( is.null(start_date) ){
     
-    f <- function(d){
-      buying_date <- my_buying_dates[d$ticker]
+    f <- function(tick, d){
+      buying_date <- my_buying_dates[tick]
+      
       d %>%
+        mutate( ticker = rep(tick, nrow(.)) ) %>%
         filter(date >= buying_date) %>% 
         compute_daily_returns() 
     }
@@ -442,16 +545,22 @@ calculate_multiple_assets_returns <- function(
   
   else{
     
-    f <- function(d){
+    f <- function(tick, d){
+      
       d %>%
+        mutate( ticker = rep(tick, nrow(.)) ) %>% 
         filter(date >= start_date) %>% 
         compute_daily_returns() 
+      
     }
     
   }
   
-  lapply(X = assets_value_list[tickers], FUN = f) %>% 
-    bind_rows()
+  res <- mapply(FUN = f, 
+                tick = tickers, d = data_list[tickers], 
+                SIMPLIFY = F) %>% bind_rows()
+  
+  return(res)
   
 }
 
@@ -467,29 +576,25 @@ get_current_cumret <- function(cumret_data){
   
 }
 
-get_best_asset <- function(assets_cumret){
-  "Return asset with best cumulative returns as of today."
+get_best_asset <- function(assets_total_rets){
+  "Return asset with best total returns as of today."
   
-  d <- assets_cumret %>% 
-    filter(date == max(date)) %>% 
-    ungroup() %>% 
-    filter(cr == max(cr, na.rm = T))
-  l <- list(asset = get_company_name(d$ticker), 
-            pct_cr = cumret_to_percent(d$cr))
-  return(l) 
+  res <- assets_total_rets %>% 
+    filter(tot_ret == max(tot_ret))
+  
+  list(asset = get_company_name(res$ticker), 
+       pct_tot_ret = ret_to_percent(res$tot_ret))
   
 }
 
-get_worst_asset <- function(assets_cumret){
-  "Return asset with worst cumulative returns as of today."
+get_worst_asset <- function(assets_total_rets){
+  "Return asset with worst total returns as of today."
   
-  d <- assets_cumret %>% 
-    filter(date == max(date)) %>% 
-    ungroup() %>% 
-    filter(cr == min(cr, na.rm = T))
-  l <- list(asset = get_company_name(d$ticker), 
-            pct_cr = cumret_to_percent(d$cr))
-  return(l) 
+  res <- assets_total_rets %>% 
+    filter(tot_ret == min(tot_ret))
+  
+  list(asset = get_company_name(res$ticker), 
+       pct_tot_ret = ret_to_percent(res$tot_ret))
   
 }
 
@@ -799,8 +904,11 @@ calculate_weighted_cor <- function(asset1, asset2, cor_mat, weights){
   
 }
 
-calculate_avg_cor <- function(cor_mat, weights){
+calculate_avg_cor <- function(cor_mat, weights_data){
   "Calculate average correlation btw several assets."
+  
+  weights <- weights_data$wts
+  names(weights) <- weights_data$ticker
   
   assets <- colnames(cor_mat)
   denom <- 1 - sum(weights**2)
@@ -1125,11 +1233,12 @@ plot_evolution <- function(
   
 }
 
-plot_portfolio_composition <- function(assets_weights){
-  "Return a pie chart with each asset's value."
+plot_portfolio_composition <- function(assets_weights, mode = "current_val"){
+  "Return a pie chart with the contribution of each asset to the portfolio
+  based on their current value."
   
   gradient <- colorRampPalette(c("#C9E4EA", "#567FA4"))
-  numeric_cut <- cut(assets_weights$pct, 
+  numeric_cut <- cut(assets_weights$pct_val, 
                      breaks = nrow(assets_weights)) %>%
     as.numeric()
   assets_weights <- assets_weights %>%
@@ -1144,12 +1253,10 @@ plot_portfolio_composition <- function(assets_weights){
             textinfo = "label+percent",
             insidetextfont = list(color = "black"),
             hoverinfo = "text",
-            text = ~paste0(asset, " (€", value %>%
-                             round(2) %>%
-                             format(big.mark = ",", 
-                                    decimal.mark = ".", 
-                                    scientific = F), 
-                           ")"),
+            text = ~paste0(asset, 
+                           "(", 
+                           format_number(value), 
+                           "€)"),
             marker = list(colors = ~ colors, 
                           line = list(color = "#FFFFFF", width = 1)),
             showlegend = FALSE)
@@ -1585,22 +1692,18 @@ return_selling_points <- function(indicators_dat, indicators){
   
 }
 
-add_returns <- function(
-  selling_points_dat,
-  buying_date, 
-  num_shares
-){
+add_returns <- function(selling_points_dat){
   "Add global returns for selling points."
   ticker <- selling_points_dat %>%
     pull(ticker) %>% 
     unique()
-  buying_val <- yf_data[[ticker]] %>%
-    filter(date == buying_date) %>% 
-    pull(close)
   
+  buying_date <- my_buying_dates[ticker]
+  buying_price <- get_buying_price(ticker)
+
   selling_points_dat %>% 
     filter(date >= buying_date) %>% 
-    mutate( returns = calculate_total_returns(p0 = buying_val*num_shares, p1 = close*num_shares) )
+    mutate( returns = calculate_total_returns(p0 = buying_price, p1 = close) )
 
 }
 
@@ -1646,9 +1749,9 @@ stock_recommender <- function(
           
           if (nrow(dat) > 0){
             dat <- dat %>% 
+              return_last_signal_point() %>% 
               add_returns(buying_date = buying_dates[ticker], 
-                          num_shares = num_shares[ticker]) %>% 
-              return_last_signal_point()
+                          num_shares = num_shares[ticker])
             
             return(dat)
           }
@@ -1717,7 +1820,7 @@ infoBox_last_price <- function(last_price){
   "Return infoBox for last price."
   
   infoBox(title = "Current price",
-          value = last_price,
+          value = last_price %>% round(2),
           color = "light-blue", 
           icon = tags$i(class = "fas fa-euro-sign", 
                         style = "font-size: 20px"), 
@@ -1728,35 +1831,23 @@ infoBox_last_value <- function(last_val){
   "Return infoBox for last value"
   
   infoBox(title = "Current value",
-          value = paste(last_val, "€"), 
+          value = paste(last_val %>% round(0), "€"), 
           color = "purple", 
           icon = tags$i(class = "fas fa-money-check", 
                         style = "font-size: 20px"), 
           fill = F)
 }
 
-infoBox_avg_pred <- function(avg_pred, ticker){
-  "Return infoBox for average predicted value."
+infoBox_total_invest <- function(total_invest){
+  "Return infoBox for total amount invested."
   
-  if (ticker == "All"){
-    title <- "Average predicted value"
-    value <- paste(avg_pred, "€")
-    color <- "purple"
-    icon <- tags$i(class = "fas fa-money-check", 
-                   style = "font-size: 20px")
-  }
-  else {
-    title <- "Average predicted price"
-    value <- avg_pred
-    color <- "light-blue"
-    icon <- tags$i(class = "fas fa-dollar-sign", 
-                   style = "font-size: 20px")
-  }
-  infoBox(title = title,
-          value = value, 
-          color = color, 
-          icon = icon, 
+  infoBox(title = "Total invested",
+          value = paste(total_invest %>% round(0), "€"), 
+          color = "light-blue", 
+          icon = tags$i(class = "fas fa-money-check", 
+                        style = "font-size: 20px"), 
           fill = F)
+  
 }
 
 infoBox_num_shares <- function(num_shares){
@@ -1793,12 +1884,12 @@ infoBox_last_cumret <- function(last_cr){
   return(ib)
 }
 
-infoBox_asset_cumret <- function(asset, type = "best"){
+infoBox_asset_tot_ret <- function(asset, type = "best"){
   "Return infoBox to display best asset's cumulative returns."
   
-  val <- ifelse(asset$pct_cr > 0, 
-                paste("+", asset$pct_cr), 
-                paste("-", abs(asset$pct_cr)))
+  val <- ifelse(asset$pct_tot_ret > 0, 
+                paste("+", asset$pct_tot_ret), 
+                paste("-", abs(asset$pct_tot_ret)))
   
   if (type == "best"){
     icon <- tags$i(class = "fas fa-thumbs-up", 
