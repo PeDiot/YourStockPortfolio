@@ -1820,7 +1820,7 @@ infoBox_last_price <- function(last_price){
   "Return infoBox for last price."
   
   infoBox(title = "Current price",
-          value = last_price %>% round(2),
+          value = last_price %>% format_number(),
           color = "light-blue", 
           icon = tags$i(class = "fas fa-euro-sign", 
                         style = "font-size: 20px"), 
@@ -1918,7 +1918,7 @@ infoBox_sharpe <- function(sr){
                    "green")
   ib <- infoBox(title = "Sharpe ratio", 
                 value = round(sr, 2), 
-                icon = tags$i(class = "fas fa-percent", 
+                icon = tags$i(class = "fas fa-calculator", 
                               style="font-size: 20px"), 
                 color = color, 
                 fill = F)
