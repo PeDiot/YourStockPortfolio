@@ -116,8 +116,13 @@ names(my_tickers) <- symbols[my_tickers_ix, ] %>%
 
 ## Transactions ------------------------------------------------------------------
 
-btc_tickers <- lapply(X = 1:4, FUN = function(i) paste("BTC-EUR", i, sep = "_")) %>% unlist()
-amzn_tickers <- lapply(X = 1:2, FUN = function(i) paste("AMZN", i, sep = "_")) %>% unlist()
+n_btc_tx <- 5
+btc_tickers <- lapply(X = 1:n_btc_tx, 
+                      FUN = function(i) paste("BTC-EUR", i, sep = "_")) %>% unlist()
+
+n_amzn_tx <- 2
+amzn_tickers <- lapply(X = 1:n_amzn_tx, 
+                       FUN = function(i) paste("AMZN", i, sep = "_")) %>% unlist()
 
 my_tickers_tx <- c(btc_tickers, 
                    "ETH-EUR", 
@@ -132,7 +137,8 @@ my_buying_dates <- c(
   "2022-03-02", 
   "2022-05-30", 
   "2022-06-06", 
-  "2022-06-13", 
+  "2022-06-13",
+  "2022-06-20", 
   "2022-02-02", 
   "2022-02-03", 
   "2022-03-02", 
@@ -148,7 +154,8 @@ my_num_shares <- c(
   0.00037241, 
   0.00041181, 
   0.00025110, 
-  0.00031765, 
+  0.00031765,
+  0.00041653, 
   0.00594658, 
   10.8270573, 
   5.77722346, 
