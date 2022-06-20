@@ -114,7 +114,7 @@ ui <- fluidPage(
 ## portfolio composition ---------------------------------------------------------
                               tabPanel("Composition",
                                      br(), 
-                                     h4(strong("Contribution of each asset to the portfolio value"), 
+                                     h4(strong("Contribution of each asset to the portfolio"), 
                                         align = "center", 
                                         style = "color:#76787B;"),
                                      div(plotlyOutput("portfolio_composition", 

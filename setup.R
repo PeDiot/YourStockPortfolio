@@ -1470,10 +1470,7 @@ rsi_chart <- function(plotly_obj, trace_name = "RSI"){
               line = list( color = if_else(trace_name == "RSI", 
                                            rsi,
                                            stoch_rsi), 
-                           width = 1.2, 
-                           dash = if_else(trace_name == "RSI", 
-                                          "plain", 
-                                          "dot")) ) %>%
+                           width = 1.2 )) %>%
     add_trace(type = "scatter", 
               mode = "lines",
               marker = NULL,
