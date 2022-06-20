@@ -1527,7 +1527,7 @@ financialDataViz <- function(data, ticker, indicators = c("Volume", "MACD", "RSI
     plot_list[["MACD"]] <- data %>%
       plot_ly() %>% 
       macd_chart() %>%
-      plotly_layout(title.y = "", show_grid = F)
+      plotly_layout(title.y = "", show_grid = T)
   }
   
   if ("RSI" %in% indicators){
@@ -1535,7 +1535,7 @@ financialDataViz <- function(data, ticker, indicators = c("Volume", "MACD", "RSI
       plot_ly() %>% 
       rsi_chart() %>%
       rsi_chart(trace_name = "stochRSI") %>% 
-      plotly_layout(title.y = "", show_grid = F)
+      plotly_layout(title.y = "", show_grid = T)
   }
   
   plot_heights <- list(
