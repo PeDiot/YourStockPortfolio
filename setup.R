@@ -1691,18 +1691,19 @@ return_selling_points <- function(indicators_dat, indicators){
   
 }
 
-add_returns <- function(selling_points_dat){
+add_returns <- function(selling_points_dat, assets_total_returns){
   "Add global returns for selling points."
-  ticker <- selling_points_dat %>%
-    pull(ticker) %>% 
-    unique()
   
-  buying_date <- my_buying_dates[ticker]
-  buying_price <- get_buying_price(ticker)
-
-  selling_points_dat %>% 
-    filter(date >= buying_date) %>% 
-    mutate( returns = calculate_total_returns(p0 = buying_price, p1 = close) )
+  if(nrow(selling_points_dat) > 0){
+    ticker <- selling_points_dat %>%
+      pull(ticker) %>% 
+      unique()
+    
+    tot_ret <- assets_total_returns[assets_total_returns$ticker == ticker, ]$tot_ret
+    
+    selling_points_dat %>% 
+      mutate( returns = tot_ret )
+  }
 
 }
 
@@ -1717,8 +1718,7 @@ stock_recommender <- function(
   macd_signal = 9, 
   rsi_period = 14, 
   indicators = c("MACD"),
-  num_shares = NULL,  
-  buying_dates = NULL
+  assets_total_returns
 ){
   "Build the recommendation system."
   process <- function(indicators_dat, ticker){
@@ -1736,24 +1736,15 @@ stock_recommender <- function(
     else{
       if (action == "Sell"){
         
-        if (nrow(indicators_dat) > 0){
-          ticker <- indicators_dat %>% 
-            head(1) %>% 
-            pull(ticker)
-        }
+        dat <- indicators_dat %>%
+          return_selling_points(indicators = indicators) 
         
-        if (ticker %in% my_tickers){
-          dat <- indicators_dat %>%
-            return_selling_points(indicators = indicators) 
+        if (nrow(dat) > 0){
+          dat <- dat %>% 
+            return_last_signal_point() %>% 
+            add_returns(assets_total_returns = assets_total_returns)
           
-          if (nrow(dat) > 0){
-            dat <- dat %>% 
-              return_last_signal_point() %>% 
-              add_returns(buying_date = buying_dates[ticker], 
-                          num_shares = num_shares[ticker])
-            
-            return(dat)
-          }
+          return(dat)
         }
         
       }
@@ -1764,6 +1755,10 @@ stock_recommender <- function(
       
     }
     
+  }
+  
+  if (action == "Sell"){
+    stock_data <- stock_data[my_tickers]
   }
   
   dat <- lapply(X = stock_data, 

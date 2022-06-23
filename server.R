@@ -336,8 +336,7 @@ output$auth_output <- renderPrint({
                                               action = input$action,       
                                               start_date = input$recommendation_start_date, 
                                               indicators = input$reco_indicators, 
-                                              num_shares = my_num_shares, 
-                                              buying_dates = my_buying_dates) 
+                                              assets_total_returns = assets_total_returns) 
           
           recommended_tickers <- recommendation$ticker 
           
