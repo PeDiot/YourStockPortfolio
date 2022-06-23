@@ -401,8 +401,7 @@ output$auth_output <- renderPrint({
               else{
                 cumrets %>%
                   plot_ly() %>%
-                  plot_cumulative_returns(multiple = T,
-                                          legend_group = NULL)  
+                  plot_cumulative_returns(multiple = T, with_legend = F)  
               }
             }
             

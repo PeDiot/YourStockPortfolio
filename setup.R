@@ -1067,8 +1067,9 @@ plot_cumulative_returns <- function(
   multiple = F, 
   title = "", 
   trace_col = evolution, 
-  legend_group,
-  yaxis = NULL
+  legend_group = NULL,
+  yaxis = NULL, 
+  with_legend = T
 ){
   "Plot cumulative returns evolution."
 
@@ -1115,7 +1116,8 @@ plot_cumulative_returns <- function(
     layout(title = title,
            xaxis = list(title = ""),
            yaxis = list(title = ""), 
-           legend = plotly_legend())
+           legend = plotly_legend(), 
+           showlegend = with_legend)
   
   return(p)
   
