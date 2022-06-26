@@ -13,7 +13,8 @@ stock_tickers_ <- structure(list(
               dowJ_assets$tickers, 
               sp100_assets$tickers, 
               "COIN",
-              "UNI1-EUR")
+              "UNI1-EUR", 
+              "GFC.PA")
 ),
   class = "data.frame", 
   row.names = c(rownames(cac40_assets), 
@@ -21,7 +22,8 @@ stock_tickers_ <- structure(list(
                 rownames(dowJ_assets), 
                 rownames(sp100_assets), 
                 "COINBASE", 
-                "UNISWAP") 
+                "UNISWAP", 
+                "GECINA") 
 ) %>% 
   distinct(tickers, .keep_all = T) 
 
