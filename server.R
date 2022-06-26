@@ -84,9 +84,14 @@ output$auth_output <- renderPrint({
     worst_asset <- get_worst_asset(assets_total_returns) 
     
 ### data viz --------------------------------------------------------------
-    output$portfolio_composition <- renderPlotly({
+    output$portfolio_composition_val <- renderPlotly({
       my_assets_weights %>%
         plot_portfolio_composition()
+    })
+    
+    output$portfolio_composition_invest <- renderPlotly({
+      my_assets_weights %>%
+        plot_portfolio_composition(mode = "invest")
     })
     
     output$best_asset <- renderInfoBox({

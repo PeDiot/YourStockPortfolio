@@ -361,15 +361,15 @@ calculate_assets_weights <- function(tickers){
   
   d <- data.frame(
     ticker = lapply(X = tickers, FUN = extract_ticker) %>% unlist(), 
-    invests = invests,
-    value = current_vals, 
+    invest = invests,
+    val = current_vals, 
     row.names = 1:length(tickers)
   ) %>%
     group_by(ticker) %>% 
-    summarise_at( vars(invests, value), sum ) %>% 
-    mutate(wts = invests / total_invest, 
-           wts_val = value / total_val) %>%
-    mutate(pct = 100*wts, 
+    summarise_at( vars(invest, val), sum ) %>% 
+    mutate(wts_invest = invest / total_invest, 
+           wts_val = val / total_val) %>%
+    mutate(pct_invest = 100*wts_invest, 
            pct_val = 100*wts_val)
   
   return(d)
@@ -495,7 +495,7 @@ compute_weighted_returns <- function(ret_data, wts_dat){
                         by = "ticker")
   
   ret_data %>%
-    mutate(wt_return = wts * ret)
+    mutate(wt_return = wts_invest * ret)
   
 }
 
@@ -907,7 +907,7 @@ calculate_weighted_cor <- function(asset1, asset2, cor_mat, weights){
 calculate_avg_cor <- function(cor_mat, weights_data){
   "Calculate average correlation btw several assets."
   
-  weights <- weights_data$wts
+  weights <- weights_data$wts_invest
   names(weights) <- weights_data$ticker
   
   assets <- colnames(cor_mat)
@@ -1235,30 +1235,39 @@ plot_evolution <- function(
   
 }
 
-plot_portfolio_composition <- function(assets_weights, mode = "current_val"){
+plot_portfolio_composition <- function(assets_weights, mode = "val"){
   "Return a pie chart with the contribution of each asset to the portfolio
   based on their current value."
   
-  gradient <- colorRampPalette(c("#C9E4EA", "#567FA4"))
-  numeric_cut <- cut(assets_weights$pct_val, 
+  if (mode == "invest"){
+    gradient <- colorRampPalette(c("#D2F5E8", "#699B89"))
+  }
+  else{
+    if (mode == "val"){
+      gradient <- colorRampPalette(c("#E0D7E8", "#9A8AA9"))
+    }
+    else{ stop("mode takes the following values: 'val' or 'invest'.") }
+  }
+  
+  numeric_cut <- cut(assets_weights %>% pull(all_of( paste("pct", mode, sep = "_") )), 
                      breaks = nrow(assets_weights)) %>%
     as.numeric()
   assets_weights <- assets_weights %>%
-    mutate( colors = gradient(nrow(assets_weights))[numeric_cut] )
+    mutate( colors = gradient(nrow(assets_weights))[numeric_cut] ) %>%
+    mutate(asset = lapply(ticker, get_company_name))
   
   fig <- assets_weights %>%
     mutate(asset = lapply(ticker, get_company_name)) %>% 
     plot_ly(labels = ~ticker, 
-            values = ~value, 
+            values = paste0("~", mode) %>% as.formula(), 
             type = "pie", 
             textposition = "inside",
             textinfo = "label+percent",
             insidetextfont = list(color = "black"),
             hoverinfo = "text",
-            text = ~paste0(asset, 
-                           "(", 
-                           format_number(value), 
-                           "€)"),
+            text = ~paste0("</br> Asset: ", asset, 
+                           "</br> Invested: ", invest %>% format_number(), "€", 
+                           "</br> Value: ", val %>% format_number(), "€"),
             marker = list(colors = ~ colors, 
                           line = list(color = "#FFFFFF", width = 1)),
             showlegend = FALSE)
