@@ -5,10 +5,10 @@ account: pdiot
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 5817205
-bundleId: 6044734
+bundleId: 6046035
 url: https://pdiot.shinyapps.io/StockPortfolio/
-when: 1656274949.68086
-lastSyncTime: 1656274949.68086
+when: 1656318845.01331
+lastSyncTime: 1656318845.01331
 asMultiple: FALSE
 asStatic: FALSE
-ignoredFiles: excel_to_rdata.R|financial_indicators.md|README.md|tickers/backup/tickers_america.xlsx|tickers/backup/tickers_france.xlsx|tickers/backup/tickers_germany.xlsx|tickers/backup/tickers_unitedkingdom.xlsx|tickers/tickers.py
+ignoredFiles: .RData|excel_to_rdata.R|financial_indicators.md|README.md|tickers/backup/tickers_america.xlsx|tickers/backup/tickers_france.xlsx|tickers/backup/tickers_germany.xlsx|tickers/backup/tickers_unitedkingdom.xlsx|tickers/tickers.py
