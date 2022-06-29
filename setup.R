@@ -1375,7 +1375,7 @@ bbands_chart <- function(plotly_obj){
               marker = NULL,
               x = ~date,
               y = ~dn, 
-              name = "B Bands", 
+              name = "Bollinger Inf", 
               line = list(color = bbands,
                           width = .9), 
               inherit = F) %>%
@@ -1384,10 +1384,9 @@ bbands_chart <- function(plotly_obj){
               marker = NULL,
               x = ~date,
               y = ~up, 
-              name = "B Bands", 
+              name = "Bollinger Sup", 
               line = list(color = bbands,
-                          width = .9), 
-              showlegend = FALSE, 
+                          width = .9),
               inherit = F)
   
   return(p)
