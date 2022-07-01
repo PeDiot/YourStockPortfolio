@@ -106,7 +106,8 @@ my_tickers <- c("BTC-EUR",
                 "COIN", 
                 "AMZN", 
                 "FB", 
-                "NVDA")
+                "NVDA", 
+                "GFC.PA")
 
 my_tickers_ix <- symbols %>%
   mutate(idxs = 1:nrow(.)) %>% 
@@ -133,7 +134,8 @@ my_tickers_tx <- c(btc_tickers,
                    "COIN", 
                    amzn_tickers, 
                    "FB", 
-                   "NVDA")
+                   "NVDA", 
+                   "GFC.PA")
 
 my_buying_dates <- c(
   "2022-03-02", 
@@ -149,7 +151,8 @@ my_buying_dates <- c(
   "2022-04-08", 
   "2022-06-16", 
   "2022-05-17", 
-  "2022-05-30"
+  "2022-05-30", 
+  "2022-07-01"
 )
 names(my_buying_dates) <- my_tickers_tx
 
@@ -167,7 +170,8 @@ my_num_shares <- c(
   0.15021685, 
   0.04869812, 
   0.20416538, 
-  0.22274457
+  0.22274457, 
+  0.334
 )
 
 names(my_num_shares) <- my_tickers_tx
