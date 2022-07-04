@@ -119,11 +119,6 @@ output$auth_output <- renderPrint({
     cor_mat <- my_assets_returns_6m %>% 
       select(-date) %>%
       cor(use = "complete.obs")
-    
-    p_mat <- my_assets_returns_6m %>% 
-      select(-date) %>%
-      cor_pmat(use = "complete.obs")
-    
 ### portfolio average correlation --------------------------------------------------------------
     avg_cor <- calculate_avg_cor(cor_mat, my_assets_weights)
     
@@ -133,7 +128,7 @@ output$auth_output <- renderPrint({
 ### data viz --------------------------------------------------------------
     
     output$cor_mat <- renderPlotly({
-      plot_cor_mat(cor_mat, p_mat)
+      plot_cor_mat(cor_mat)
     })
     
     output$sharpeRatio <- renderInfoBox({

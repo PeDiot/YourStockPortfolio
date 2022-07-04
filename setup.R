@@ -1581,8 +1581,6 @@ plot_cor_mat <- function(cor_mat, p_mat = NULL){
   
   cor_plot <- ggcorrplot(cor_mat,
                          hc.order = TRUE, 
-                         lab = T, 
-                         lab_col = "#76787B",
                          p.mat = p_mat, 
                          type = "lower",
                          outline.col = "white",
