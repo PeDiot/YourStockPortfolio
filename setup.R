@@ -580,7 +580,8 @@ get_best_asset <- function(assets_total_rets){
   "Return asset with best total returns as of today."
   
   res <- assets_total_rets %>% 
-    filter(tot_ret == max(tot_ret))
+    filter(tot_ret == max(tot_ret)) %>% 
+    head(n = 1)
   
   list(asset = get_company_name(res$ticker), 
        pct_tot_ret = ret_to_percent(res$tot_ret))
@@ -591,7 +592,8 @@ get_worst_asset <- function(assets_total_rets){
   "Return asset with worst total returns as of today."
   
   res <- assets_total_rets %>% 
-    filter(tot_ret == min(tot_ret))
+    filter(tot_ret == min(tot_ret)) %>% 
+    head(n = 1)
   
   list(asset = get_company_name(res$ticker), 
        pct_tot_ret = ret_to_percent(res$tot_ret))
@@ -1891,7 +1893,9 @@ infoBox_asset_tot_ret <- function(asset, type = "best"){
   
   val <- ifelse(asset$pct_tot_ret > 0, 
                 paste("+", asset$pct_tot_ret), 
-                paste("-", abs(asset$pct_tot_ret)))
+                ifelse(asset$pct_tot_ret == 0, 
+                       0, 
+                       paste("-", abs(asset$pct_tot_ret))))
   
   if (type == "best"){
     icon <- tags$i(class = "fas fa-thumbs-up", 
