@@ -37,7 +37,9 @@ output$auth_output <- renderPrint({
     
     my_assets_returns <- my_assets_value_list %>% 
       calculate_multiple_assets_returns(tickers = my_tickers_tx) %>%
-      weight_returns_per_asset()
+      weight_returns_per_asset() %>%
+      group_by(ticker, date) %>%
+      summarise(ret = sum(ret)) 
     
     weighted_returns <- compute_weighted_returns(ret_data = my_assets_returns, 
                                                  wts_dat = my_assets_weights)
@@ -100,6 +102,18 @@ output$auth_output <- renderPrint({
     
     output$worst_asset <- renderInfoBox({
       infoBox_asset_tot_ret(worst_asset, type = "worst")
+    })
+    
+    
+## cumulative returns -------------------------------------------------------------- 
+    
+    cumulative_returns <- weighted_returns %>% 
+      compute_cumulative_returns()
+    
+    output$cumrets_plot <- renderPlotly({
+      cumulative_returns %>% 
+        plot_ly() %>% 
+        plot_cumulative_returns(multiple = T)
     })
     
 ## correlations -------------------------------------------------------------- 
