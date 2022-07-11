@@ -87,7 +87,7 @@ ui <- fluidPage(
                           
                           tags$head(tags$style("h5 {color:#76787B;}")),
                           h5(strong("Stocks")), 
-                          HTML("<ul><li>Coinbase (Lydia)</li><li>Amazon (Lydia)</li><li>Meta Platforms (Lydia)</li><li>Nvidia (Lydia)</li><li>Gecina (IB)</li></ul>"),
+                          HTML("<ul><li>Coinbase (Lydia)</li><li>Amazon (Lydia)</li><li>Meta Platforms (Lydia)</li><li>Nvidia (Lydia)</li><li>Gecina (IB)</li><li>Schneider Electric (IB)</li></ul>"),
                           br(), 
                           h5(strong("Cryptocurrencies")), 
                           HTML("<ul><li>Bitcoin (Binance & Lydia)</li><li>Ethereum (Binance)</li><li>Polygon MATIC (Wallet)</li><li>Decentraland MANA (Lydia)</li></ul>"),
@@ -226,7 +226,7 @@ ui <- fluidPage(
                             inputId = "start_date_fin_analysis",
                             label = h5("How far back do you want to go?", 
                                        style = "color:#76787B;"),
-                            value = today() - months(3),
+                            value = today() - months(6),
                             minDate = date_init, 
                             maxDate = today() - days(35),
                             width = "200px",

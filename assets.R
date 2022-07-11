@@ -107,7 +107,8 @@ my_tickers <- c("BTC-EUR",
                 "AMZN", 
                 "FB", 
                 "NVDA", 
-                "GFC.PA")
+                "GFC.PA", 
+                "SU.PA")
 
 my_tickers_ix <- symbols %>%
   mutate(idxs = 1:nrow(.)) %>% 
@@ -119,23 +120,28 @@ names(my_tickers) <- symbols[my_tickers_ix, ] %>%
 
 ## Transactions ------------------------------------------------------------------
 
-n_btc_tx <- 6
-btc_tickers <- lapply(X = 1:n_btc_tx, 
+n_btc_tx <- 7
+btc_tx <- lapply(X = 1:n_btc_tx, 
                       FUN = function(i) paste("BTC-EUR", i, sep = "_")) %>% unlist()
 
+n_eth_tx <- 2
+eth_tx <- lapply(X = 1:n_eth_tx, 
+                  FUN = function(i) paste("ETH-EUR", i, sep = "_")) %>% unlist()
+
 n_amzn_tx <- 2
-amzn_tickers <- lapply(X = 1:n_amzn_tx, 
+amzn_tx <- lapply(X = 1:n_amzn_tx, 
                        FUN = function(i) paste("AMZN", i, sep = "_")) %>% unlist()
 
-my_tickers_tx <- c(btc_tickers, 
-                   "ETH-EUR", 
+my_tickers_tx <- c(btc_tx, 
+                   eth_tx,  
                    "MATIC-EUR", 
                    "MANA-EUR", 
                    "COIN", 
-                   amzn_tickers, 
+                   amzn_tx, 
                    "FB", 
                    "NVDA", 
-                   "GFC.PA")
+                   "GFC.PA", 
+                   "SU.PA")
 
 my_buying_dates <- c(
   "2022-03-02", 
@@ -143,8 +149,10 @@ my_buying_dates <- c(
   "2022-06-06", 
   "2022-06-13",
   "2022-06-20", 
-  "2022-06-27",
+  "2022-06-27", 
+  "2022-07-11",
   "2022-02-02", 
+  "2022-07-05", 
   "2022-02-03", 
   "2022-03-02", 
   "2022-03-29",
@@ -152,7 +160,8 @@ my_buying_dates <- c(
   "2022-06-16", 
   "2022-05-17", 
   "2022-05-30", 
-  "2022-07-01"
+  "2022-07-01", 
+  "2022-07-04"
 )
 names(my_buying_dates) <- my_tickers_tx
 
@@ -163,7 +172,9 @@ my_num_shares <- c(
   0.00031765,
   0.00041653, 
   0.00061189,
+  .00071752, 
   0.00594658, 
+  0.01296357,
   10.7270573, 
   5.77722346, 
   0.10934065, 
@@ -171,7 +182,8 @@ my_num_shares <- c(
   0.04869812, 
   0.20416538, 
   0.22274457, 
-  0.334
+  0.334, 
+  0.1601
 )
 
 names(my_num_shares) <- my_tickers_tx
