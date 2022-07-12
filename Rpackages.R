@@ -10,6 +10,7 @@ library(shinydashboard)
 library(shinythemes)
 library(shinyWidgets)
 library(shinymanager)
+library(shiny.worker)
 
 library(ggcorrplot)
 library(plotly)
