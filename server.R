@@ -1,3 +1,5 @@
+worker <- initialize_worker()
+
 server <- function(input, output, session) {
 
 # User Authentification ---------------------------------------------------
@@ -37,9 +39,7 @@ output$auth_output <- renderPrint({
     
     my_assets_returns <- my_assets_value_list %>% 
       calculate_multiple_assets_returns(tickers = my_tickers_tx) %>%
-      weight_returns_per_asset() %>%
-      group_by(ticker, date) %>%
-      summarise(ret = sum(ret)) 
+      weight_returns_per_asset() 
     
     weighted_returns <- compute_weighted_returns(ret_data = my_assets_returns, 
                                                  wts_dat = my_assets_weights)
@@ -165,7 +165,8 @@ output$auth_output <- renderPrint({
     port_dat <- merge(x = port_value, 
                       y = port_cumulative_ret, 
                       by = "date") %>%
-      format_table_numbers() %>% 
+      mutate_at(vars(ret:cr), round, digits = 3) %>% 
+      mutate(value = format_number(value)) %>% 
       arrange(desc(date)) %>%
       rename(Date = date, 
              Value = value, 
@@ -425,5 +426,3 @@ output$auth_output <- renderPrint({
       )
     
 }
-      
-      

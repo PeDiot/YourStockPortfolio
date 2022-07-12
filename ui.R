@@ -139,6 +139,18 @@ ui <- fluidPage(
                                               column(width = 1), 
                                               infoBoxOutput("worst_asset"))), 
 
+## assets cumulative returns ---------------------------------------------------------
+
+                              tabPanel(title = "Returns", 
+                                       br(),
+                                       h4(strong("Your assets cumulative returns"), 
+                                          align = "center", 
+                                          style = "color:#76787B;"),
+                                       div(plotlyOutput("cumrets_plot", 
+                                                        height = 600, 
+                                                        width = 900), 
+                                           align = "center")), 
+
 ## correlations ---------------------------------------------------------
 
                               tabPanel("Correlations", 

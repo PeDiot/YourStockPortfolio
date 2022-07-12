@@ -196,11 +196,11 @@ ret_to_percent <- function(tot_ret){
   
 }
 
-format_number <- function(x){
+format_number <- function(x, digits=2){
   "Render number easier to read."
   
   x %>% 
-    round(2) %>%
+    round(digits) %>%
     prettyNum(big.mark = ",") 
   
 }
@@ -484,7 +484,9 @@ weight_returns_per_asset <- function(returns_data){
     ungroup() %>%
     select(-ticker) %>% 
     rename(ticker = ticker_) %>%
-    relocate(ticker, .before = date)
+    relocate(ticker, .before = date) %>%
+    group_by(ticker, date) %>%
+    summarise(ret = sum(ret)) 
   
 }
 
@@ -1111,6 +1113,7 @@ plot_cumulative_returns <- function(
               marker = NULL,
               x = c(~min(date), ~max(date)),
               y = c(1, 1), 
+              name = "No loss / No gain",
               yaxis = yaxis, 
               line = list(color = "black",
                           width = 2), 
