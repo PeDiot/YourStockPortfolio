@@ -60,7 +60,7 @@ ui <- fluidPage(
                       " website. 
                                 Feel free to modify the source code in order to select your own assets. 
                                 Go to ",
-                      a(href = "https://github.com/PeDiot/StockPortfolio",
+                      a(href = "https://github.com/PeDiot/YourStockPortfolio",
                         target = "_blank",
                         icon("github")),
                       " to find more details on the project."), 
