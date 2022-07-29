@@ -130,7 +130,7 @@ names(my_tickers) <- symbols[my_tickers_ix, ] %>%
 
 ## Transactions ------------------------------------------------------------------
 
-n_btc_tx <- 7
+n_btc_tx <- 8
 btc_tx <- lapply(X = 1:n_btc_tx, 
                       FUN = function(i) paste("BTC-EUR", i, sep = "_")) %>% unlist()
 
@@ -162,6 +162,7 @@ my_buying_dates <- c(
   "2022-06-20", 
   "2022-06-27", 
   "2022-07-11",
+  "2022-07-29", 
   # ETH-EUR
   "2022-02-02", 
   "2022-07-05", 
@@ -195,6 +196,7 @@ my_num_shares <- c(
   0.00041653, 
   0.00061189,
   0.00071752, 
+  0.00041181, 
   # ETH-EUR
   0.00594658, 
   0.01296357,
