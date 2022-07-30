@@ -286,7 +286,7 @@ ui <- fluidPage(
                                          align = "center")),
                             tabPanel("Indicators",
                                      div(plotlyOutput("financial_data_viz", 
-                                                      height = 750, 
+                                                      height = 800, 
                                                       width = 1000), 
                                          align = "center")) 
                             

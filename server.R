@@ -1,5 +1,3 @@
-worker <- initialize_worker()
-
 server <- function(input, output, session) {
 
 # User Authentification ---------------------------------------------------
