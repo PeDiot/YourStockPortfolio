@@ -4,3 +4,4 @@
 .Ruserdata
 financial_indicators.html
 *.ini
+server_shiny_worker.R
