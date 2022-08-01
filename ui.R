@@ -435,8 +435,7 @@ ui <- fluidPage(
                       width = "200px", 
                       placeholder = "",
                       multiple = F, 
-                      clearButton = F), 
-                    
+                      clearButton = F)
                   ), 
 
                   mainPanel(
