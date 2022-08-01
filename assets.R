@@ -142,13 +142,17 @@ n_amzn_tx <- 2
 amzn_tx <- lapply(X = 1:n_amzn_tx, 
                        FUN = function(i) paste("AMZN", i, sep = "_")) %>% unlist()
 
+n_meta_tx <- 2
+meta_tx <- lapply(X = 1:n_meta_tx, 
+                  FUN = function(i) paste("META", i, sep = "_")) %>% unlist()
+
 my_tickers_tx <- c(btc_tx, 
                    eth_tx,  
                    "MATIC-EUR", 
                    "MANA-EUR", 
                    "COIN", 
                    amzn_tx, 
-                   "META", 
+                   meta_tx, 
                    "NVDA", 
                    "GFC.PA", 
                    "SU.PA")
@@ -178,6 +182,7 @@ my_buying_dates <- c(
   "2022-06-16",
   # META
   "2022-05-17",
+  "2022-08-01", 
   # NVDA
   "2022-05-30", 
   # GFC.PA
@@ -212,6 +217,7 @@ my_num_shares <- c(
   0.04869812, 
   # META
   0.20416538, 
+  0.1906, 
   # NVDA
   0.22274457, 
   # GFC.PA
