@@ -1532,14 +1532,14 @@ financialDataViz <- function(data, ticker, indicators = c("Volume", "MACD", "RSI
     plot_list[["OBV"]] <- data %>%
       plot_ly() %>% 
       obv_chart() %>% 
-      plotly_layout(title.y = "") 
+      plotly_layout(title.y = "OBV") 
   }
   
   if ("MACD" %in% indicators){
     plot_list[["MACD"]] <- data %>%
       plot_ly() %>% 
       macd_chart() %>%
-      plotly_layout(title.y = "", show_grid = T)
+      plotly_layout(title.y = "MACD", show_grid = T)
   }
   
   if ("RSI" %in% indicators){
@@ -1547,7 +1547,7 @@ financialDataViz <- function(data, ticker, indicators = c("Volume", "MACD", "RSI
       plot_ly() %>% 
       rsi_chart() %>%
       rsi_chart(trace_name = "stochRSI") %>% 
-      plotly_layout(title.y = "", show_grid = T)
+      plotly_layout(title.y = "RSI", show_grid = T)
   }
   
   plot_heights <- list(
@@ -1565,7 +1565,7 @@ financialDataViz <- function(data, ticker, indicators = c("Volume", "MACD", "RSI
                  shareX = TRUE, 
                  titleY = TRUE) %>% 
     layout(title = "", 
-           legend = plotly_legend(y.pos = -.1))
+           legend = plotly_legend(y.pos = -.05))
   
   return(fig)
   
