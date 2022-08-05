@@ -146,6 +146,10 @@ n_meta_tx <- 2
 meta_tx <- lapply(X = 1:n_meta_tx, 
                   FUN = function(i) paste("META", i, sep = "_")) %>% unlist()
 
+n_su_tx <- 2
+su_tx <- lapply(X = 1:n_su_tx, 
+                  FUN = function(i) paste("SU.PA", i, sep = "_")) %>% unlist()
+
 my_tickers_tx <- c(btc_tx, 
                    eth_tx,  
                    "MATIC-EUR", 
@@ -155,7 +159,7 @@ my_tickers_tx <- c(btc_tx,
                    meta_tx, 
                    "NVDA", 
                    "GFC.PA", 
-                   "SU.PA")
+                   su_tx)
 
 my_buying_dates <- c(
   # BTC-EUR
@@ -188,7 +192,8 @@ my_buying_dates <- c(
   # GFC.PA
   "2022-07-01", 
   # SU.PA
-  "2022-07-04"
+  "2022-07-04", 
+  "2022-08-05"
 )
 names(my_buying_dates) <- my_tickers_tx
 
@@ -223,7 +228,8 @@ my_num_shares <- c(
   # GFC.PA
   0.334, 
   # SU.PA
-  0.1601
+  0.1601, 
+  0.1269
 )
 
 names(my_num_shares) <- my_tickers_tx
