@@ -866,16 +866,52 @@ get_rsi_signals <- function(
   
 }
 
-add_obv <- function(fin_data){
+add_trix <- function(price_data, n_ma_periods = 20, n_sig_periods = 9){
+  "Add the TRIX (Triple Moving Average) indicator to the data."
+  
+  res <- price_data %>% 
+    pull(close) %>%
+    TRIX(n = n_ma_periods, nSig = n_sig_periods)
+  
+  price_data %>%
+    mutate(TRIX = res[, "TRIX"], TRIXSig = res[, "signal"]) %>% 
+    mutate(TRIXHist = TRIX - TRIXSig)
+  
+}
+
+get_trix_signals <- function(price_data){
+  "Identify buying and selling signals from TRIX"
+  
+  col_names <- colnames(price_data)
+  if ("TRIXHist" %in% col_names){
+    price_data %>%
+      mutate(
+        TRIXBuy = case_when(
+          TRIXHist > 0 & lag(TRIXHist) < 0 ~ 1, 
+          TRUE ~ 0
+        ), 
+        TRIXSell = case_when(
+          TRIXHist < 0 & lag(TRIXHist) > 0 ~ 1, 
+          TRUE ~ 0
+        )
+      )
+  }
+  else{
+    stop("You need to calculate TRIX.")
+  }
+  
+}
+
+add_obv <- function(price_data){
   "Add on-balance-volume indicator."
-  fin_data %>%
+  price_data %>%
     mutate(OBV = OBV(price = close, volume = volume))
 }
 
 
-add_price_direction <- function(fin_data){
+add_price_direction <- function(price_data){
   "Stock direction based on opening and closing prices."
-  fin_data %>%
+  price_data %>%
     mutate(direction = if_else(
       condition = close > open, 
       true = "Up", 
@@ -1980,3 +2016,18 @@ picker_inputs_font_weight <- function(){
   font_weights[my_tickers_ix] <- "font-weight: bold;"
   return(font_weights)
 }
+
+loader_css <- "
+#spinner {
+display: inline-block;
+border: 3px solid #f3f3f3;
+border-top: 3px solid #3498db;
+border-radius: 50%;
+width: 40px;
+height: 40px;
+animation: spin 1s ease-in-out infinite;
+}
+@keyframes spin {
+0% { transform: rotate(0deg); }
+100% { transform: rotate(360deg); }
+}"
