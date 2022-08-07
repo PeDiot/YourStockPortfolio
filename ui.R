@@ -4,7 +4,8 @@ ui <- fluidPage(
   html_dependency_awesome(),
   
   tags$head(
-    tags$style(infoBox_dims())
+    tags$style(infoBox_dims()), 
+    tags$style(loader_css)
   ),
  
   navbarPage("Your Stock Portfolio", 
@@ -22,9 +23,7 @@ ui <- fluidPage(
                       br(), 
                       br(), 
                       br(), 
-                      column(width = 12, 
-                        imageOutput("home_img"), 
-                        align = "center"), 
+                      column(width = 12, imageOutput("home_img"), align = "center"), 
                       br(),
                       br(), 
                       br(), 
@@ -435,7 +434,22 @@ ui <- fluidPage(
                       width = "200px", 
                       placeholder = "",
                       multiple = F, 
-                      clearButton = F)
+                      clearButton = F), 
+                    br(), 
+                    br(), 
+                    br(), 
+                    fluidRow(
+                      column( 
+                        width = 4, 
+                        actionButton(inputId = "run", label = "Run") 
+                      ), 
+                      column( 
+                        width = 4,
+                        conditionalPanel(condition="$('html').hasClass('shiny-busy')",
+                                         div( div(class = "loader-text"),
+                                              div(id = "spinner") ) )
+                        )
+                    )
                   ), 
 
                   mainPanel(
@@ -445,15 +459,13 @@ ui <- fluidPage(
                       tabPanel(title = "Table", 
                                br(),
                                uiOutput(outputId = "recommendation_tab_title"),
-                               br(),  
+                               br(),
                                div(dataTableOutput(outputId = "recommendation_data"), 
                                    align = "center")), 
                       
                       tabPanel(title = "Returns", 
                                br(),
-                               h4(strong("Cumulative returns"), 
-                                  align = "center", 
-                                  style = "color:#76787B;"),
+                               uiOutput(outputId = "cumrets_title"), 
                                div(plotlyOutput("recommendation_chart", 
                                                 height = 600, 
                                                 width = 900), 

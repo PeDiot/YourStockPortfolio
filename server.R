@@ -20,7 +20,6 @@ output$auth_output <- renderPrint({
   }, deleteFile = F)
   
 # portfolio --------------------------------------------------------------
-      
     my_assets_value_list <- compute_assets_value(data = yf_data[my_tickers])
     my_assets_value <- my_assets_value_list %>% bind_rows()
     
@@ -334,16 +333,10 @@ output$auth_output <- renderPrint({
 # stock recommender --------------------------------------------------------------
       
       observeEvent(
-        c(input$reco_indicators, 
-          input$recommendation_start_date, 
-          input$action), 
+       input$run, 
         
         {
-          
-          req(input$reco_indicators)
-          req(input$recommendation_start_date)
-          req(input$action)
-          
+         
 ## compute recommendations --------------------------------------------------------------
           recommendation <- stock_recommender(stock_data = yf_data, 
                                               action = input$action,       
@@ -355,6 +348,7 @@ output$auth_output <- renderPrint({
           
 ## recommended stocks table --------------------------------------------------------------
           output$recommendation_data <- renderDataTable( { 
+            
             new_tickers <- lapply(recommended_tickers, 
                                   FUN = function(x){
                                     sym <- symbols %>% filter(tickers == x) %>% rownames()
@@ -368,25 +362,34 @@ output$auth_output <- renderPrint({
               select(-date) %>% 
               rename_at( vars( !contains("MA") & !contains("RSI") ), str_to_title )
             
-          }, 
-          options = list(pageLength = 5,
-                         lengthMenu = c(5, 10, 20)) 
+            }, 
+          
+            options = list( pageLength = 5, lengthMenu = c(5, 10, 20) ) 
           )
+          
           
 ## recommendation table title --------------------------------------------------------------
           output$recommendation_tab_title <- renderUI({
+            
             if (input$action == "Buy"){
               title <- "Interesting stocks to buy as of"
             }
+            
             else{
               title <- "Stocks you could sell for a profit as of"
             }
+            
             h4(strong(paste(title, format(today(), "%B %d, %Y"))), 
                align = "center", 
                style = "color:#76787B;")
+            
           })
           
 ## cumulative returns chart --------------------------------------------------------------
+          
+          output$cumrets_title <- renderUI({
+            h4( strong("Cumulative returns"), align = "center", style = "color:#76787B;" )
+          })
           
           output$recommendation_chart <- renderPlotly({
             
