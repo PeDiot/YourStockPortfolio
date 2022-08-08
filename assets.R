@@ -16,14 +16,14 @@ stock_tickers_ <- structure(list(
               "UNI1-EUR", 
               "GFC.PA")
 ),
-  class = "data.frame", 
-  row.names = c(rownames(cac40_assets), 
-                rownames(stoxx600_assets),
-                rownames(dowJ_assets), 
-                rownames(sp100_assets), 
-                "COINBASE", 
-                "UNISWAP", 
-                "GECINA") 
+class = "data.frame", 
+row.names = c(rownames(cac40_assets), 
+              rownames(stoxx600_assets),
+              rownames(dowJ_assets), 
+              rownames(sp100_assets), 
+              "COINBASE", 
+              "UNISWAP", 
+              "GECINA") 
 ) %>% 
   distinct(tickers, .keep_all = T) 
 
@@ -98,11 +98,11 @@ symbols <- structure(list(
   tickers = c(crypto_tickers, 
               stock_tickers, 
               etf_tickers)
-  ),
-  class = "data.frame", 
-  row.names = c(crypto_names, 
-                stock_names, 
-                etf_names)
+),
+class = "data.frame", 
+row.names = c(crypto_names, 
+              stock_names, 
+              etf_names)
 ) %>% 
   distinct(tickers, .keep_all = T) 
 
@@ -130,17 +130,17 @@ names(my_tickers) <- symbols[my_tickers_ix, ] %>%
 
 ## Transactions ------------------------------------------------------------------
 
-n_btc_tx <- 8
+n_btc_tx <- 9
 btc_tx <- lapply(X = 1:n_btc_tx, 
-                      FUN = function(i) paste("BTC-EUR", i, sep = "_")) %>% unlist()
+                 FUN = function(i) paste("BTC-EUR", i, sep = "_")) %>% unlist()
 
 n_eth_tx <- 3
 eth_tx <- lapply(X = 1:n_eth_tx, 
-                  FUN = function(i) paste("ETH-EUR", i, sep = "_")) %>% unlist()
+                 FUN = function(i) paste("ETH-EUR", i, sep = "_")) %>% unlist()
 
 n_amzn_tx <- 2
 amzn_tx <- lapply(X = 1:n_amzn_tx, 
-                       FUN = function(i) paste("AMZN", i, sep = "_")) %>% unlist()
+                  FUN = function(i) paste("AMZN", i, sep = "_")) %>% unlist()
 
 n_meta_tx <- 2
 meta_tx <- lapply(X = 1:n_meta_tx, 
@@ -148,7 +148,7 @@ meta_tx <- lapply(X = 1:n_meta_tx,
 
 n_su_tx <- 2
 su_tx <- lapply(X = 1:n_su_tx, 
-                  FUN = function(i) paste("SU.PA", i, sep = "_")) %>% unlist()
+                FUN = function(i) paste("SU.PA", i, sep = "_")) %>% unlist()
 
 my_tickers_tx <- c(btc_tx, 
                    eth_tx,  
@@ -171,6 +171,7 @@ my_buying_dates <- c(
   "2022-06-27", 
   "2022-07-11",
   "2022-07-29", 
+  "2022-08-08", 
   # ETH-EUR
   "2022-02-02", 
   "2022-07-05", 
@@ -207,6 +208,7 @@ my_num_shares <- c(
   0.00061189,
   0.00071752, 
   0.00041181, 
+  0.00061388,
   # ETH-EUR
   0.00594658, 
   0.01296357,
