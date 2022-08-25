@@ -134,7 +134,7 @@ n_btc_tx <- 9
 btc_tx <- lapply(X = 1:n_btc_tx, 
                  FUN = function(i) paste("BTC-EUR", i, sep = "_")) %>% unlist()
 
-n_eth_tx <- 3
+n_eth_tx <- 4
 eth_tx <- lapply(X = 1:n_eth_tx, 
                  FUN = function(i) paste("ETH-EUR", i, sep = "_")) %>% unlist()
 
@@ -176,6 +176,7 @@ my_buying_dates <- c(
   "2022-02-02", 
   "2022-07-05", 
   "2022-07-25", 
+  "2022-08-25",
   # MATIC-EUR
   "2022-02-03", 
   # MANA-EUR
@@ -213,6 +214,7 @@ my_num_shares <- c(
   0.00594658, 
   0.01296357,
   0.00982442,
+  0.00853483, 
   # MATIC-EUR
   10.7270573, 
   # MANA-EUR
