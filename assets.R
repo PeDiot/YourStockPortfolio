@@ -125,8 +125,12 @@ my_tickers_ix <- symbols %>%
   filter(tickers %in% my_tickers) %>%
   pull(idxs)
 
-names(my_tickers) <- symbols[my_tickers_ix, ] %>%
-  names()
+names(my_tickers) <- lapply(X = my_tickers, FUN = get_company_name) %>% unlist()
+
+my_sold_tickers <- "SU.PA"
+
+my_active_tickers <- setdiff(my_tickers, my_sold_tickers)
+names(my_active_tickers) <- lapply(X = my_active_tickers, FUN = get_company_name) %>% unlist()
 
 ## Transactions ------------------------------------------------------------------
 
@@ -150,18 +154,22 @@ n_su_tx <- 2
 su_tx <- lapply(X = 1:n_su_tx, 
                 FUN = function(i) paste("SU.PA", i, sep = "_")) %>% unlist()
 
-my_tickers_tx <- c(btc_tx, 
-                   eth_tx,  
-                   "MATIC-EUR", 
-                   "MANA-EUR", 
-                   "COIN", 
-                   amzn_tx, 
-                   meta_tx, 
-                   "NVDA", 
-                   "GFC.PA", 
-                   su_tx)
+my_tickers_tx <- c(
+  btc_tx, 
+  eth_tx,  
+  "MATIC-EUR", 
+  "MANA-EUR", 
+  "COIN", 
+  amzn_tx, 
+  meta_tx, 
+  "NVDA", 
+  "GFC.PA", 
+  su_tx
+)
 
-my_buying_dates <- c(
+n_tx <- length(my_tickers_tx)
+
+my_buy_dates <- c(
   # BTC-EUR
   "2022-03-02", 
   "2022-05-30", 
@@ -197,7 +205,14 @@ my_buying_dates <- c(
   "2022-07-04", 
   "2022-08-05"
 )
-names(my_buying_dates) <- my_tickers_tx
+names(my_buy_dates) <- my_tickers_tx
+
+my_sale_dates <- c(
+  rep("", n_tx - n_su_tx), 
+  # SU.PA
+  rep("2022-08-14", n_su_tx)
+)
+names(my_sale_dates) <- my_tickers_tx
 
 my_num_shares <- c(
   # BTC-EUR
