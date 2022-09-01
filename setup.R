@@ -75,7 +75,7 @@ get_company_name <- function(ticker){
 }
 
 extract_ticker <- function(ticker_name){
-  "Extract ticker name in the case of multiple buying points."
+  "Extract ticker name in the case of multiple buy points."
   
   ticker <- str_split(string = ticker_name, pattern = "_") %>% unlist()
   
@@ -213,29 +213,42 @@ format_table_numbers <- function(tab){
               format_number) 
 }
 
-get_buying_price <- function(ticker){
-  "Return asset buying price."
-  from <- my_buying_dates[ticker] %>% as.Date()
+get_buy_price <- function(ticker){
+  "Return asset buy price."
+  buy_date <- my_buy_dates[ticker] %>% as.Date()
   
   yf_data[[ extract_ticker(ticker) ]] %>%
-    filter(date == from) %>% 
+    filter(date == buy_date) %>% 
     pull(close)
   
+}
+
+get_sale_price <- function(ticker){
+  "Return asset sale price."
+  sale_date <- my_sale_dates[ticker] %>% as.Date()
+  
+  yf_data[[ extract_ticker(ticker) ]] %>%
+    filter(date == sale_date) %>% 
+    pull(close)
 }
 
 get_current_price <- function(ticker){
   "Return asset current price."
   
-  yf_data[[ extract_ticker(ticker) ]] %>%
-    filter(date == today()) %>% 
-    pull(close)
+  if ( my_sale_dates[ticker] == "" ){
+    price <- yf_data[[ extract_ticker(ticker) ]] %>%
+      filter(date == today()) %>% 
+      pull(close) 
+  }
+  else{ price <- NA }
   
+  return(price)
 }
 
 get_invested_amount <- function(ticker){
   "Return invested amount for one asset."
   
-  price <- get_buying_price(ticker)
+  price <- get_buy_price(ticker)
   return(price * my_num_shares[ticker])
   
 }
@@ -244,7 +257,10 @@ get_current_value <- function(ticker){
   "Compute asset current value given number of shares held."
   
   price <- get_current_price(ticker)
-  return(price * my_num_shares[ticker])
+  if ( is.na(price) ){ val <- 0 }
+  else{ val <- price * my_num_shares[ticker] }
+  
+  return(val)
 }
 
 calculate_total_invested <- function(tickers){
@@ -257,42 +273,56 @@ calculate_total_invested <- function(tickers){
   
 }
 
-create_tx_table <- function(tickers, buying_dates, num_shares){
+create_tx_table <- function(tickers, buy_dates, sale_dates, num_shares){
   "Create a table to display transactions."
   
-  assets <- lapply(X = tickers, 
-                   FUN = function(x) extract_ticker(x) %>% 
-                     get_company_name()) %>% unlist()
+  assets <- lapply( X = tickers, 
+                    FUN = function(x){
+                      extract_ticker(x) %>% 
+                        get_company_name()
+                    } ) %>% unlist()
   
-  buying_prices <- lapply(X = tickers, FUN = get_buying_price) %>% unlist() 
+  buy_prices <- lapply(X = tickers, FUN = get_buy_price) %>% unlist() 
   
-  current_prices <- lapply(X = tickers, FUN = get_current_price) %>% unlist()
+  last_prices <- lapply(X = tickers, 
+                           FUN = function(ticker){
+                             if (sale_dates[ticker] == ""){
+                               price <- get_current_price(ticker)
+                             }
+                             else{
+                               price <- get_sale_price(ticker)
+                             }
+                             
+                             return(price)
+                           } ) %>% unlist()
   
   invest_amounts <- lapply(X = tickers, FUN = get_invested_amount) %>% unlist()
   
-  val_returns <- round( num_shares * (current_prices - buying_prices), 2 )
+  val_returns <- round( num_shares * (current_prices - buy_prices), 2 )
+    
+  pct_returns <- round( 100 * calculate_total_returns(buy_prices, current_prices), 2 ) 
   
-  pct_returns <- round( 100 * calculate_total_returns(buying_prices, current_prices), 2 ) 
-  
-  data.frame(buying_dates = buying_dates,
-             assets = assets, 
-             num_shares = num_shares, 
-             buying_prices = buying_prices, 
-             current_prices = current_prices,
-             invest_amounts = invest_amounts, 
-             val_returns = val_returns, 
-             pct_returns = pct_returns) %>% 
-    mutate_at( vars(buying_prices:invest_amounts), format_number ) %>% 
-    rename(`Buying date` = buying_dates, 
-            Asset = assets, 
-           `Number of shares` = num_shares, 
-           `Buying price (€)` = buying_prices, 
-           `Current price (€)` = current_prices, 
-           `Invested amount (€)` = invest_amounts, 
-           `€ Returns` = val_returns, 
-           `% Returns` = pct_returns) %>%
+  data.frame( assets = assets, 
+              buy_dates = buy_dates,
+              sale_dates = sale_dates, 
+              num_shares = num_shares, 
+              buy_prices = buy_prices, 
+              last_prices = last_prices,
+              invest_amounts = invest_amounts, 
+              val_returns = val_returns, 
+              pct_returns = pct_returns ) %>% 
+    mutate_at( vars(buy_prices:invest_amounts), format_number ) %>% 
+    rename( Asset = assets, 
+            `Buy date` = buy_dates, 
+            `Sale date` = sale_dates, 
+            `Number of shares` = num_shares, 
+            `Buy price (€)` = buy_prices, 
+            `Last price (€)`= last_prices, 
+            `Invested amount (€)` = invest_amounts, 
+            `€ Returns` = val_returns, 
+            `% Returns` = pct_returns) %>%
     as.data.frame(row.names = 1:nrow(.)) %>% 
-    arrange(desc(`Buying date`))
+    arrange(desc(`Buy date`))
   
 }
 
@@ -310,11 +340,12 @@ usd_to_euros <- function(usd_val){
 compute_assets_value <- function(
   data,
   tickers = my_tickers_tx, 
-  buying_dates = my_buying_dates, 
+  buy_dates = my_buy_dates, 
+  sale_dates = my_sale_dates, 
   num_shares = my_num_shares, 
   start_date = NULL
 ){
-  "Return assets value given prices and number of shares from start date or buying date."
+  "Return assets value given prices and number of shares from start date or buy date."
   
   res <- lapply(
     
@@ -325,11 +356,14 @@ compute_assets_value <- function(
       df <- data[[extract_ticker(ticker)]]
       n_shares <- num_shares[ticker]
       from <- ifelse(is.null(start_date), 
-                     buying_dates[ticker], 
+                     buy_dates[ticker], 
                      start_date) 
+      to <- if_else(sale_dates[ticker] == "",
+                    today(), 
+                    sale_dates[ticker] %>% as.Date())
       
       df %>%
-        filter( date >= from ) %>% 
+        filter( date >= from & date <= to) %>% 
         mutate( n_shares = rep(n_shares, nrow(.)) ) %>%
         mutate( value = close * n_shares ) 
       
@@ -402,8 +436,19 @@ get_all_assets_total_returns <- function(tickers){
     
     tot_ret = lapply(
       X = tickers, 
-      FUN = function(ticker) calculate_total_returns( p0 = get_buying_price(ticker),
-                                                      p1 = get_current_price(ticker) )
+      FUN = function(ticker){
+        
+        if (sale_dates[ticker] == ""){
+          last_price <- get_current_price(ticker)
+        }
+        else{
+          last_price <- get_sale_price(ticker)
+        }
+        
+        calculate_total_returns( p0 = get_buy_price(ticker),
+                                 p1 = last_price )
+        
+      }
     ) %>% unlist(), 
     
     row.names = 1:length(tickers)
@@ -475,7 +520,7 @@ weight_tx_returns <-  function(tx, tot_returns){
 }
 
 weight_returns_per_asset <- function(returns_data){
-  "Weight returns for asset with multiple buying points."
+  "Weight returns for asset with multiple buy points."
   
   returns_data %>%
     mutate(ticker_ = lapply(ticker, extract_ticker) %>% unlist()) %>%
@@ -530,16 +575,16 @@ calculate_multiple_assets_returns <- function(
   tickers = my_tickers,
   start_date = NULL
 ){
-  "Calculate daily returns for multiple assets since each asset buying date or start date."
+  "Calculate daily returns for multiple assets since each asset buy date or start date."
   
   if ( is.null(start_date) ){
     
     f <- function(tick, d){
-      buying_date <- my_buying_dates[tick]
+      buy_date <- my_buy_dates[tick]
       
       d %>%
         mutate( ticker = rep(tick, nrow(.)) ) %>%
-        filter(date >= buying_date) %>% 
+        filter(date >= buy_date) %>% 
         compute_daily_returns() 
     }
     
@@ -637,7 +682,7 @@ get_ma_signals <- function(
   MAshort = "MA20",
   MAlong = "MA50"
 ){
-  "Identify buying and selling signals from moving average."
+  "Identify buy and sale signals from moving average."
   
   col_names <- colnames(price_data)
   if (MAshort %in% col_names & MAlong %in% col_names){
@@ -647,7 +692,7 @@ get_ma_signals <- function(
           ((!!sym(MAshort)) > (!!sym(MAlong)) & lag((!!sym(MAshort))) < lag((!!sym(MAlong)))) ~ 1, 
           TRUE ~ 0
         ),
-        MASell = case_when(
+        MAsale = case_when(
           ((!!sym(MAshort)) < (!!sym(MAlong)) & lag((!!sym(MAshort))) > lag((!!sym(MAlong)))) ~ 1, 
           TRUE ~ 0
         )
@@ -734,7 +779,7 @@ add_macd <- function(
 }
 
 get_macd_signals <- function(price_data){
-  "Identify buying and selling signals from MACD."
+  "Identify buy and sale signals from MACD."
   
   col_names <- colnames(price_data)
   if ("MACD" %in% col_names & "MACDSignal" %in% col_names){
@@ -744,7 +789,7 @@ get_macd_signals <- function(price_data){
           MACDHist > 0 & lag(MACDHist) < 0 ~ 1, 
           TRUE ~ 0
         ), 
-        MACDSell = case_when(
+        MACDsale = case_when(
           MACDHist < 0 & lag(MACDHist) > 0 ~ 1, 
           TRUE ~ 0
         )
@@ -803,7 +848,7 @@ get_rsi_signals <- function(
   rsi_type = "RSI", 
   ma_window = 100
 ){
-  "Identify buying and selling signals from RSI for days where closing price > MAlong."
+  "Identify buy and sale signals from RSI for days where closing price > MAlong."
   
   start_date <- price_data %>% 
     pull(date) %>%
@@ -835,7 +880,7 @@ get_rsi_signals <- function(
             RSI < 30 ~ 1, 
             TRUE ~ 0
           ), 
-          RSISell = case_when(
+          RSIsale = case_when(
             RSI > 70 ~ 1, 
             TRUE ~ 0
           )
@@ -850,7 +895,7 @@ get_rsi_signals <- function(
               stochRSI < 20 ~ 1, 
               TRUE ~ 0
             ), 
-            stochRSISell = case_when(
+            stochRSIsale = case_when(
               stochRSI > 80 ~ 1, 
               TRUE ~ 0
             )
@@ -880,7 +925,7 @@ add_trix <- function(price_data, n_ma_periods = 20, n_sig_periods = 9){
 }
 
 get_trix_signals <- function(price_data){
-  "Identify buying and selling signals from TRIX"
+  "Identify buy and sale signals from TRIX"
   
   col_names <- colnames(price_data)
   if ("TRIXHist" %in% col_names){
@@ -890,7 +935,7 @@ get_trix_signals <- function(price_data){
           TRIXHist > 0 & lag(TRIXHist) < 0 ~ 1, 
           TRUE ~ 0
         ), 
-        TRIXSell = case_when(
+        TRIXsale = case_when(
           TRIXHist < 0 & lag(TRIXHist) > 0 ~ 1, 
           TRUE ~ 0
         )
@@ -944,7 +989,7 @@ calculate_weighted_cor <- function(asset1, asset2, cor_mat, weights){
   
 }
 
-calculate_avg_cor <- function(cor_mat, weights_data){
+calculate_avg_cor <- function(cor_mat, weights_data, tickers){
   "Calculate average correlation btw several assets."
   
   weights <- weights_data$wts_invest
@@ -954,7 +999,7 @@ calculate_avg_cor <- function(cor_mat, weights_data){
   denom <- 1 - sum(weights**2)
   
   num <- lapply(
-    X = names(my_tickers), 
+    X = names(tickers), 
     FUN = function(asset1) lapply(X = assets, 
                                   FUN = calculate_weighted_cor, 
                                   asset2 = asset1, 
@@ -1674,35 +1719,35 @@ add_indicators <- function(
   
 }
 
-## Potential buying points ------------------------------------------------------------------
+## Potential buy points ------------------------------------------------------------------
 
-return_buying_points <- function(indicators_dat, indicators){
-  "Return buying points based on multiple indicators (MACD, RSI, stochRSI)."
+return_buy_points <- function(indicators_dat, indicators){
+  "Return buy points based on multiple indicators (MACD, RSI, stochRSI)."
   
-  buying_dat <- indicators_dat
+  buy_dat <- indicators_dat
   
   if ("MACD" %in% indicators){
-    buying_dat <- buying_dat %>% get_macd_signals()
+    buy_dat <- buy_dat %>% get_macd_signals()
   }
   
   if ("RSI" %in% indicators){
-    buying_dat <- buying_dat %>% get_rsi_signals()
+    buy_dat <- buy_dat %>% get_rsi_signals()
   }
   
   if ("stochRSI" %in% indicators){
-    buying_dat <- buying_dat %>% get_rsi_signals(rsi_type = "stochRSI")
+    buy_dat <- buy_dat %>% get_rsi_signals(rsi_type = "stochRSI")
   }
   
-  buying_dat <- buying_dat %>%
+  buy_dat <- buy_dat %>%
     mutate( TotalBuy = select(., contains("Buy")) %>% rowSums() ) %>%
     filter(TotalBuy == length(indicators)) 
   
-  return(buying_dat)
+  return(buy_dat)
   
 }
 
 return_last_signal_point <- function(signal_points_dat){
-  "Return the last buying point for a given stock."
+  "Return the last buy point for a given stock."
   
   signal_points_dat %>% 
     filter( date == if_else(max(date) == today(), 
@@ -1711,44 +1756,44 @@ return_last_signal_point <- function(signal_points_dat){
 }
 
 
-## Potential selling points -----------------------------------------------------------------
+## Potential sale points -----------------------------------------------------------------
 
-return_selling_points <- function(indicators_dat, indicators){
-  "Return selling points based on multiple indicators (MACD, RSI, both)."
+return_sale_points <- function(indicators_dat, indicators){
+  "Return sale points based on multiple indicators (MACD, RSI, both)."
   
-  selling_dat <- indicators_dat
+  sale_dat <- indicators_dat
   
   if ("MACD" %in% indicators){
-    selling_dat <- selling_dat %>% get_macd_signals()
+    sale_dat <- sale_dat %>% get_macd_signals()
   }
   
   if ("RSI" %in% indicators){
-    selling_dat <- selling_dat %>% get_rsi_signals()
+    sale_dat <- sale_dat %>% get_rsi_signals()
   }
   
   if ("stochRSI" %in% indicators){
-    selling_dat <- selling_dat %>% get_rsi_signals(rsi_type = "stochRSI")
+    sale_dat <- sale_dat %>% get_rsi_signals(rsi_type = "stochRSI")
   }
   
-  selling_dat <- selling_dat %>%
-    mutate( TotalSell = select(., contains("Sell")) %>% rowSums() ) %>%
-    filter(TotalSell == length(indicators)) 
+  sale_dat <- sale_dat %>%
+    mutate( Totalsale = select(., contains("sale")) %>% rowSums() ) %>%
+    filter(Totalsale == length(indicators)) 
   
-  return(selling_dat)
+  return(sale_dat)
   
 }
 
-add_returns <- function(selling_points_dat, assets_total_returns){
-  "Add global returns for selling points."
+add_returns <- function(sale_points_dat, assets_total_returns){
+  "Add global returns for sale points."
   
-  if(nrow(selling_points_dat) > 0){
-    ticker <- selling_points_dat %>%
+  if(nrow(sale_points_dat) > 0){
+    ticker <- sale_points_dat %>%
       pull(ticker) %>% 
       unique()
     
     tot_ret <- assets_total_returns[assets_total_returns$ticker == ticker, ]$tot_ret
     
-    selling_points_dat %>% 
+    sale_points_dat %>% 
       mutate( returns = tot_ret )
   }
 
@@ -1773,7 +1818,7 @@ stock_recommender <- function(
     if (action == "Buy"){
       
       dat <- indicators_dat %>%
-        return_buying_points(indicators = indicators)
+        return_buy_points(indicators = indicators)
       dat <- dat %>% 
         return_last_signal_point()
     
@@ -1781,10 +1826,10 @@ stock_recommender <- function(
     }
     
     else{
-      if (action == "Sell"){
+      if (action == "sale"){
         
         dat <- indicators_dat %>%
-          return_selling_points(indicators = indicators) 
+          return_sale_points(indicators = indicators) 
         
         if (nrow(dat) > 0){
           dat <- dat %>% 
@@ -1797,14 +1842,14 @@ stock_recommender <- function(
       }
       
       else{
-        stop("'action' must take one of the following values: 'Buy', 'Sell'.")
+        stop("'action' must take one of the following values: 'Buy', 'sale'.")
       }
       
     }
     
   }
   
-  if (action == "Sell"){
+  if (action == "sale"){
     stock_data <- stock_data[my_tickers]
   }
   
@@ -1984,12 +2029,12 @@ infoBox_avg_cor <- function(avg_cor){
 asset_inputs <- function(
   asset, 
   val = 1, 
-  buying_date = today() - months(6)
+  buy_date = today() - months(6)
 ){
-  "Build shiny inputs for number of shares and buying date."
+  "Build shiny inputs for number of shares and buy date."
   
   numInputId <- paste("num_shares", get_ticker(asset), sep = "_")
-  dateInputId <- paste("buying_date", get_ticker(asset), sep = "_")
+  dateInputId <- paste("buy_date", get_ticker(asset), sep = "_")
   
   fluidRow(
     style = "height:80px;", 
@@ -2001,10 +2046,10 @@ asset_inputs <- function(
     column(width = 6,
            airDatepickerInput(
              inputId = dateInputId,
-             value = buying_date,
+             value = buy_date,
              minDate = date_init, 
              maxDate = today(),
-             label = h5("Buying date"),
+             label = h5("buy date"),
              placeholder = "",
              multiple = F, 
              clearButton = F))
