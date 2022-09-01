@@ -118,9 +118,9 @@ output$auth_output <- renderPrint({
 ### calculate correlations btw assets returns --------------------------------------------------------------
     
     my_assets_returns_6m <- calculate_multiple_assets_returns(
-      yf_data[my_tickers],
-      my_tickers,
-      start_date = today() - months(6)
+      yf_data[my_active_tickers],
+      my_active_tickers,
+      start_date = today() - months(12)
     ) %>%
       pivot_wider(id_cols = date, 
                   names_from = ticker, 
@@ -130,8 +130,12 @@ output$auth_output <- renderPrint({
     cor_mat <- my_assets_returns_6m %>% 
       select(-date) %>%
       cor(use = "complete.obs")
+    
 ### portfolio average correlation --------------------------------------------------------------
-    avg_cor <- calculate_avg_cor(cor_mat, my_assets_weights)
+    avg_cor <- calculate_avg_cor( cor_mat = cor_mat, 
+                                  weights_data = my_assets_weights %>%
+                                    filter(ticker %in% my_active_tickers),
+                                  tickers = my_active_tickers )
     
 ### portfolio sharpe ratio --------------------------------------------------------------
     sr <- calculate_sharpeRatio(port_weighted_ret$ret)
@@ -152,7 +156,7 @@ output$auth_output <- renderPrint({
     
 ## transactions --------------------------------------------------------------
     
-    tx_table <- create_tx_table(my_tickers_tx, my_buying_dates, my_num_shares)
+    tx_table <- create_tx_table(my_tickers_tx, my_buy_dates, my_sale_dates, my_num_shares)
     output$tx_table <- renderDataTable( { tx_table },
                                          options = list(pageLength = 10,
                                                         lengthMenu = c(10, 25, 50, 100)) )
@@ -220,7 +224,9 @@ output$auth_output <- renderPrint({
       
 ## asset last price --------------------------------------------------------------
       output$asset_last_price <- renderInfoBox({
-        val <- get_current_price(ticker = input$ticker_fin_analysis)  
+        val <- yf_data[[input$ticker_fin_analysis]] %>% 
+          filter(date == today()) %>% 
+          pull(close) 
         infoBox_last_price(last_price = val)
         
       })
