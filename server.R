@@ -77,7 +77,8 @@ output$auth_output <- renderPrint({
     
 ### best and worst assets --------------------------------------------------------------
     
-    assets_total_returns <- get_all_assets_total_returns(my_tickers_tx)
+    assets_total_returns <- get_all_assets_total_returns(my_tickers_tx) %>%
+      filter(ticker %in% my_active_tickers)
     
     best_asset <- get_best_asset(assets_total_returns) 
     worst_asset <- get_worst_asset(assets_total_returns) 
@@ -158,23 +159,6 @@ output$auth_output <- renderPrint({
     
     tx_table <- create_tx_table(my_tickers_tx, my_buy_dates, my_sale_dates, my_num_shares)
     output$tx_table <- renderDataTable( { tx_table },
-                                         options = list(pageLength = 10,
-                                                        lengthMenu = c(10, 25, 50, 100)) )
-    
-    
-## portfolio data table --------------------------------------------------------------
-    port_dat <- merge(x = port_value, 
-                      y = port_cumulative_ret, 
-                      by = "date") %>%
-      mutate_at(vars(ret:cr), round, digits = 3) %>% 
-      mutate(value = format_number(value)) %>% 
-      arrange(desc(date)) %>%
-      rename(Date = date, 
-             Value = value, 
-             `Daily Weighted Returns` = ret, 
-             `Cumulative Returns` = cr) %>%
-      rename_at( vars( everything() ), str_to_title )
-    output$port_data <- renderDataTable( {port_dat}, 
                                          options = list(pageLength = 10,
                                                         lengthMenu = c(10, 25, 50, 100)) )
       

@@ -298,9 +298,9 @@ create_tx_table <- function(tickers, buy_dates, sale_dates, num_shares){
   
   invest_amounts <- lapply(X = tickers, FUN = get_invested_amount) %>% unlist()
   
-  val_returns <- round( num_shares * (current_prices - buy_prices), 2 )
+  val_returns <- round( num_shares * (last_prices - buy_prices), 2 )
     
-  pct_returns <- round( 100 * calculate_total_returns(buy_prices, current_prices), 2 ) 
+  pct_returns <- round( 100 * calculate_total_returns(buy_prices, last_prices), 2 ) 
   
   data.frame( assets = assets, 
               buy_dates = buy_dates,
@@ -438,7 +438,7 @@ get_all_assets_total_returns <- function(tickers){
       X = tickers, 
       FUN = function(ticker){
         
-        if (sale_dates[ticker] == ""){
+        if (my_sale_dates[ticker] == ""){
           last_price <- get_current_price(ticker)
         }
         else{

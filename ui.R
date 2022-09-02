@@ -86,7 +86,7 @@ ui <- fluidPage(
                           
                           tags$head(tags$style("h5 {color:#76787B;}")),
                           h5(strong("Stocks")), 
-                          HTML("<ul><li>Coinbase (Lydia)</li><li>Amazon (Lydia)</li><li>Meta Platforms (Lydia & IB)</li><li>Nvidia (Lydia)</li><li>Gecina (IB)</li><li>Schneider Electric (IB)</li></ul>"),
+                          HTML("<ul><li>Coinbase (Lydia)</li><li>Amazon (Lydia)</li><li>Meta Platforms (Lydia & IB)</li><li>Nvidia (Lydia)</li><li>Gecina (IB)</li></ul>"),
                           br(), 
                           h5(strong("Cryptocurrencies")), 
                           HTML("<ul><li>Bitcoin (Binance & Lydia)</li><li>Ethereum (Binance)</li><li>Polygon MATIC (Wallet)</li><li>Decentraland MANA (Lydia)</li></ul>"),
@@ -107,13 +107,13 @@ ui <- fluidPage(
                                      hr(), 
                                      div(plotlyOutput("portfolio_evolution", 
                                                       height = 620, 
-                                                      width = 900),
+                                                      width = 1000),
                                          align = "center")),
                             
 ## portfolio composition ---------------------------------------------------------
                               tabPanel("Composition",
                                      br(), 
-                                     h4(strong("Investment & Contributions per Asset"), 
+                                     h4(strong("Investment & Contribution per Asset"), 
                                         align = "center", 
                                         style = "color:#76787B;"), 
                                      br(), 
@@ -173,25 +173,19 @@ ui <- fluidPage(
                                            "here"), 
                                          " for more details.")),
 
-## portfolio infos ---------------------------------------------------------
+## transaction table ---------------------------------------------------------
                               tabPanel("Transactions", 
                                        br(),
                                        div(dataTableOutput(outputId = "tx_table"), 
-                                           align = "center")), 
-
-## portfolio data ---------------------------------------------------------
-                              tabPanel("Data", 
-                                       br(),
-                                       div(dataTableOutput(outputId = "port_data"), 
                                            align = "center"))
-
+        
                           )
-                          
+
                         )
-                        
+
                       )
-                      
-             ),
+
+              ), 
              
 # financial analysis ---------------------------------------------------------
              
@@ -279,7 +273,7 @@ ui <- fluidPage(
                                      hr(), 
                                      div(plotlyOutput("asset_evolution", 
                                                       height = 620, 
-                                                      width = 900),
+                                                      width = 1000),
                                          align = "center")),
                             tabPanel("Indicators",
                                      div(plotlyOutput("financial_data_viz", 
@@ -368,7 +362,7 @@ ui <- fluidPage(
                               br(),
                               div(dataTableOutput(outputId = "indicators_data"), 
                                   align = "center"))
-                   ), 
+                   )
                   
                  )
                  
@@ -398,7 +392,7 @@ ui <- fluidPage(
                       " and ", 
                       a(href = "https://www.investopedia.com/terms/m/movingaverage.asp#:~:text=In%20finance%2C%20a%20moving%20average,a%20constantly%20updated%20average%20price.",
                         target = "_blank",
-                        "SMA", ),
+                        "SMA"),
                       " indicators.", 
                       style = "color:#76787B;"), 
                     hr(), 
