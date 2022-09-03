@@ -692,7 +692,7 @@ get_ma_signals <- function(
           ((!!sym(MAshort)) > (!!sym(MAlong)) & lag((!!sym(MAshort))) < lag((!!sym(MAlong)))) ~ 1, 
           TRUE ~ 0
         ),
-        MAsale = case_when(
+        MASell = case_when(
           ((!!sym(MAshort)) < (!!sym(MAlong)) & lag((!!sym(MAshort))) > lag((!!sym(MAlong)))) ~ 1, 
           TRUE ~ 0
         )
@@ -789,7 +789,7 @@ get_macd_signals <- function(price_data){
           MACDHist > 0 & lag(MACDHist) < 0 ~ 1, 
           TRUE ~ 0
         ), 
-        MACDsale = case_when(
+        MACDSell = case_when(
           MACDHist < 0 & lag(MACDHist) > 0 ~ 1, 
           TRUE ~ 0
         )
@@ -880,7 +880,7 @@ get_rsi_signals <- function(
             RSI < 30 ~ 1, 
             TRUE ~ 0
           ), 
-          RSIsale = case_when(
+          RSISell = case_when(
             RSI > 70 ~ 1, 
             TRUE ~ 0
           )
@@ -895,7 +895,7 @@ get_rsi_signals <- function(
               stochRSI < 20 ~ 1, 
               TRUE ~ 0
             ), 
-            stochRSIsale = case_when(
+            stochRSISell = case_when(
               stochRSI > 80 ~ 1, 
               TRUE ~ 0
             )
@@ -935,7 +935,7 @@ get_trix_signals <- function(price_data){
           TRIXHist > 0 & lag(TRIXHist) < 0 ~ 1, 
           TRUE ~ 0
         ), 
-        TRIXsale = case_when(
+        TRIXSell = case_when(
           TRIXHist < 0 & lag(TRIXHist) > 0 ~ 1, 
           TRUE ~ 0
         )
@@ -1776,8 +1776,8 @@ return_sale_points <- function(indicators_dat, indicators){
   }
   
   sale_dat <- sale_dat %>%
-    mutate( Totalsale = select(., contains("sale")) %>% rowSums() ) %>%
-    filter(Totalsale == length(indicators)) 
+    mutate( TotalSale = select(., contains("sale")) %>% rowSums() ) %>%
+    filter(TotalSale == length(indicators)) 
   
   return(sale_dat)
   
@@ -1826,7 +1826,7 @@ stock_recommender <- function(
     }
     
     else{
-      if (action == "sale"){
+      if (action == "Sell"){
         
         dat <- indicators_dat %>%
           return_sale_points(indicators = indicators) 
@@ -1842,14 +1842,14 @@ stock_recommender <- function(
       }
       
       else{
-        stop("'action' must take one of the following values: 'Buy', 'sale'.")
+        stop("'action' must take one of the following values: 'Buy', 'Sell'.")
       }
       
     }
     
   }
   
-  if (action == "sale"){
+  if (action == "Sell"){
     stock_data <- stock_data[my_tickers]
   }
   
