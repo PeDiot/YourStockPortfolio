@@ -126,7 +126,7 @@ output$auth_output <- renderPrint({
       pivot_wider(id_cols = date, 
                   names_from = ticker, 
                   values_from = ret)
-    colnames(my_assets_returns_6m) <- c("date", names(my_tickers))
+    colnames(my_assets_returns_6m) <- c("date", names(my_active_tickers))
     
     cor_mat <- my_assets_returns_6m %>% 
       select(-date) %>%
