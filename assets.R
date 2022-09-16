@@ -78,6 +78,8 @@ names(crypto_tickers) <- crypto_names
 
 etf_tickers <- c("^FCHI", 
                  "^GSPC", 
+                 "VOO", 
+                 "AMUN.PA", 
                  "AFK", 
                  "EZA", 
                  "BNK.PA", 
@@ -85,6 +87,8 @@ etf_tickers <- c("^FCHI",
 
 etf_names <- c("CAC40", 
                "S&P 500", 
+               "Vanguard S&P500 ETF", 
+               "Amundi SA", 
                "Market Vectors Africa", 
                "iShares MSCI South Africa", 
                "Lyxor STOXX Europe 600 Banks", 
