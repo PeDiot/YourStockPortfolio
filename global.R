@@ -20,4 +20,3 @@ yf_data[usd_tickers] <- lapply(
   }
   
 )
-

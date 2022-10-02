@@ -76,18 +76,34 @@ names(crypto_tickers) <- crypto_names
 
 # ETFs ------------------------------------------------------------------
 
-etf_tickers <- c("^FCHI", 
-                 "^GSPC", 
-                 "VOO", 
+etf_tickers <- c("SPY", 
+                 "VTI", 
+                 "IEMG", 
+                 "BND",
+                 "ARKX",
+                 "GLD", 
+                 "SH",
+                 "ACWI", 
+                 "ITOT",
+                 "VOO",
+                 "SPYG",
                  "AMUN.PA", 
                  "AFK", 
                  "EZA", 
                  "BNK.PA", 
                  "RTWO.AS") 
 
-etf_names <- c("CAC40", 
-               "S&P 500", 
-               "Vanguard S&P500 ETF", 
+etf_names <- c("SPDR S&P 500 Trust", 
+               "Vanguard Total Stock Market",
+               "iShares Core MSCI Emerging Markets", 
+               "Vanguard Total Bond Market", 
+               "ARK Space Exploration & Innovation", 
+               "SPDR Gold", 
+               "ProShares Short S&P 500", 
+               "iShares MSCI ACWI Index Fund", 
+               "iShares Core S&P Total U.S. Stock Market", 
+               "Vanguard S&P 500", 
+               "SPDR Portfolio S&P 500 Growth", 
                "Amundi SA", 
                "Market Vectors Africa", 
                "iShares MSCI South Africa", 
@@ -266,11 +282,12 @@ names(my_num_shares) <- my_tickers_tx
 
 # USD assets ------------------------------------------------------------------
 
-usd_tickers <- c(
-  setdiff(x = stock_tickers,
-          y = c(cac40_assets$tickers, 
-                stoxx600_assets$tickers)), 
-  "^GSPC"
+usd_tickers <- setdiff(
+  x = c(stock_tickers, etf_tickers), 
+  y = c(cac40_assets$tickers, 
+        stoxx600_assets$tickers, 
+       "GFC.PA", 
+       "BNK.PA")
 )
 
 my_usd_assets <- intersect(x = usd_tickers, y = my_tickers)
