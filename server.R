@@ -1,13 +1,13 @@
 server <- function(input, output, session) {
 
 # User Authentification ---------------------------------------------------
-res_auth <- secure_server(
-  check_credentials = check_credentials(credentials)
-)
+# res_auth <- secure_server(
+#   check_credentials = check_credentials(credentials)
+# )
   
-output$auth_output <- renderPrint({
-  reactiveValuesToList(res_auth)
-})
+# output$auth_output <- renderPrint({
+#   reactiveValuesToList(res_auth)
+# })
   
 # home page --------------------------------------------------------------
   

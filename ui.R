@@ -478,5 +478,5 @@ ui <- fluidPage(
 
 # User Authentication ---------------------------------------------------
 
-ui <- secure_app(ui, theme = shinytheme("lumen"))
+# ui <- secure_app(ui, theme = shinytheme("lumen"))
 
