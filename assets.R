@@ -102,7 +102,7 @@ etf_names <- c("SPDR S&P 500 Trust",
                "ProShares Short S&P 500", 
                "iShares MSCI ACWI Index Fund", 
                "iShares Core S&P Total U.S. Stock Market", 
-               "Vanguard S&P 500", 
+               "Vanguard S&P 500 ETF", 
                "SPDR Portfolio S&P 500 Growth", 
                "Amundi SA", 
                "Market Vectors Africa", 
@@ -139,7 +139,8 @@ my_tickers <- c("BTC-EUR",
                 "NVDA", 
                 "GFC.PA", 
                 "SU.PA", 
-                "AAPL")
+                "AAPL", 
+                "VOO")
 
 my_tickers_ix <- symbols %>%
   mutate(idxs = 1:nrow(.)) %>% 
@@ -186,7 +187,8 @@ my_tickers_tx <- c(
   "NVDA", 
   "GFC.PA", 
   su_tx, 
-  "AAPL"
+  "AAPL", 
+  "VOO"
 )
 
 n_tx <- length(my_tickers_tx)
@@ -228,7 +230,9 @@ my_buy_dates <- c(
   "2022-07-04", 
   "2022-08-05", 
   # AAPL
-  "2022-09-08"
+  "2022-09-08", 
+  # VOO
+  "2022-10-17"
 )
 names(my_buy_dates) <- my_tickers_tx
 
@@ -274,7 +278,9 @@ my_num_shares <- c(
   0.1601, 
   0.1269, 
   # AAPL
-  0.32014
+  0.32014, 
+  # VOO
+  0.14812
 )
 
 names(my_num_shares) <- my_tickers_tx
