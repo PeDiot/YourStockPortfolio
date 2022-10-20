@@ -133,6 +133,7 @@ my_tickers <- c("BTC-EUR",
                 "ETH-EUR", 
                 "MATIC-EUR", 
                 "MANA-EUR", 
+                "BNB-EUR", 
                 "COIN", 
                 "AMZN", 
                 "META", 
@@ -180,7 +181,8 @@ my_tickers_tx <- c(
   btc_tx, 
   eth_tx,  
   "MATIC-EUR", 
-  "MANA-EUR", 
+  "MANA-EUR",
+  "BNB-EUR", 
   "COIN", 
   amzn_tx, 
   meta_tx, 
@@ -214,6 +216,8 @@ my_buy_dates <- c(
   "2022-02-03", 
   # MANA-EUR
   "2022-03-02", 
+  # BNB-EUR
+  "2022-10-20", 
   # COIN
   "2022-03-29",
   # AMZN
@@ -262,6 +266,8 @@ my_num_shares <- c(
   10.7270573, 
   # MANA-EUR
   5.77722346, 
+  # BNB-EUR
+  0.05197610, 
   # COIN
   0.10934065, 
   # AMZN

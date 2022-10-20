@@ -89,7 +89,7 @@ ui <- fluidPage(
                           HTML("<ul><li>Coinbase (Lydia)</li><li>Amazon (Lydia)</li><li>Meta Platforms (Lydia & IB)</li><li>Nvidia (Lydia)</li><li>Gecina (IB)</li><li>Apple (eToro)</li><li>Vanguard S&P 500 ETF (eToro)</li></ul>"),
                           br(), 
                           h5(strong("Cryptocurrencies")), 
-                          HTML("<ul><li>Bitcoin (Binance & Lydia)</li><li>Ethereum (Binance)</li><li>Polygon MATIC (Wallet)</li><li>Decentraland MANA (Lydia)</li></ul>"),
+                          HTML("<ul><li>Bitcoin (Binance & Lydia)</li><li>Ethereum (Binance)</li><li>Binance Coin (Trust Wallet)</li><li>Polygon MATIC (Metamask)</li><li>Decentraland MANA (Lydia)</li></ul>"),
       
                         ), 
                         
