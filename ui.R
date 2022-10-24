@@ -144,8 +144,8 @@ ui <- fluidPage(
                                           align = "center", 
                                           style = "color:#76787B;"),
                                        div(plotlyOutput("cumrets_plot", 
-                                                        height = 600, 
-                                                        width = 900), 
+                                                        height = 750, 
+                                                        width = 1000), 
                                            align = "center")), 
 
 ## correlations ---------------------------------------------------------
@@ -157,8 +157,8 @@ ui <- fluidPage(
                                           style = "color:#76787B;"), 
                                        br(), 
                                        div(plotlyOutput("cor_mat", 
-                                                        height = 550, 
-                                                        width = 900), 
+                                                        height = 600, 
+                                                        width = 1000), 
                                            align = "center"), 
                                        hr(), 
                                        fluidRow(column(width = 2), 
