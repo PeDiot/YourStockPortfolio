@@ -177,6 +177,10 @@ n_su_tx <- 2
 su_tx <- lapply(X = 1:n_su_tx, 
                 FUN = function(i) paste("SU.PA", i, sep = "_")) %>% unlist()
 
+n_appl_tx <- 2
+appl_tx <- lapply(X = 1:n_appl_tx, 
+                FUN = function(i) paste("AAPL", i, sep = "_")) %>% unlist()
+
 my_tickers_tx <- c(
   btc_tx, 
   eth_tx,  
@@ -189,7 +193,7 @@ my_tickers_tx <- c(
   "NVDA", 
   "GFC.PA", 
   su_tx, 
-  "AAPL", 
+  appl_tx, 
   "VOO"
 )
 
@@ -235,6 +239,7 @@ my_buy_dates <- c(
   "2022-08-05", 
   # AAPL
   "2022-09-08", 
+  "2022-11-09", 
   # VOO
   "2022-10-17"
 )
@@ -285,6 +290,7 @@ my_num_shares <- c(
   0.1269, 
   # AAPL
   0.32014, 
+  0.34, 
   # VOO
   0.14812
 )

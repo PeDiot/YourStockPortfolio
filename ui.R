@@ -86,7 +86,7 @@ ui <- fluidPage(
                           
                           tags$head(tags$style("h5 {color:#76787B;}")),
                           h5(strong("Stocks")), 
-                          HTML("<ul><li>Coinbase (Lydia)</li><li>Amazon (Lydia)</li><li>Meta Platforms (Lydia & IB)</li><li>Nvidia (Lydia)</li><li>Gecina (IB)</li><li>Apple (eToro)</li><li>Vanguard S&P 500 ETF (eToro)</li></ul>"),
+                          HTML("<ul><li>Coinbase (Lydia)</li><li>Amazon (Lydia)</li><li>Meta Platforms (Lydia & IBKR)</li><li>Nvidia (Lydia)</li><li>Gecina (IBKR)</li><li>Apple (eToro, IBKR)</li><li>Vanguard S&P 500 ETF (eToro)</li></ul>"),
                           br(), 
                           h5(strong("Cryptocurrencies")), 
                           HTML("<ul><li>Bitcoin (Binance & Lydia)</li><li>Ethereum (Binance)</li><li>Binance Coin (Trust Wallet)</li><li>Polygon MATIC (Metamask)</li><li>Decentraland MANA (Lydia)</li></ul>"),
