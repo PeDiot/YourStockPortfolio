@@ -132,14 +132,9 @@ row.names = c(crypto_names,
 my_tickers <- c("BTC-EUR", 
                 "ETH-EUR", 
                 "MATIC-EUR", 
-                "MANA-EUR", 
                 "BNB-EUR", 
-                "COIN", 
-                "AMZN", 
                 "META", 
-                "NVDA", 
                 "GFC.PA", 
-                "SU.PA", 
                 "AAPL", 
                 "VOO")
 
@@ -161,21 +156,9 @@ n_btc_tx <- 10
 btc_tx <- lapply(X = 1:n_btc_tx, 
                  FUN = function(i) paste("BTC-EUR", i, sep = "_")) %>% unlist()
 
-n_eth_tx <- 5
+n_eth_tx <- 4
 eth_tx <- lapply(X = 1:n_eth_tx, 
                  FUN = function(i) paste("ETH-EUR", i, sep = "_")) %>% unlist()
-
-n_amzn_tx <- 2
-amzn_tx <- lapply(X = 1:n_amzn_tx, 
-                  FUN = function(i) paste("AMZN", i, sep = "_")) %>% unlist()
-
-n_meta_tx <- 2
-meta_tx <- lapply(X = 1:n_meta_tx, 
-                  FUN = function(i) paste("META", i, sep = "_")) %>% unlist()
-
-n_su_tx <- 2
-su_tx <- lapply(X = 1:n_su_tx, 
-                FUN = function(i) paste("SU.PA", i, sep = "_")) %>% unlist()
 
 n_appl_tx <- 2
 appl_tx <- lapply(X = 1:n_appl_tx, 
@@ -185,14 +168,9 @@ my_tickers_tx <- c(
   btc_tx, 
   eth_tx,  
   "MATIC-EUR", 
-  "MANA-EUR",
   "BNB-EUR", 
-  "COIN", 
-  amzn_tx, 
-  meta_tx, 
-  "NVDA", 
+  "META", 
   "GFC.PA", 
-  su_tx, 
   appl_tx, 
   "VOO"
 )
@@ -201,7 +179,6 @@ n_tx <- length(my_tickers_tx)
 
 my_buy_dates <- c(
   # BTC-EUR
-  "2022-03-02", 
   "2022-05-30", 
   "2022-06-06", 
   "2022-06-13",
@@ -211,33 +188,20 @@ my_buy_dates <- c(
   "2022-07-29",
   "2022-09-18", 
   "2022-09-27", 
+  "2022-12-04", 
   # ETH-EUR
-  "2022-02-02", 
   "2022-07-05", 
   "2022-07-25", 
   "2022-08-25",
   "2022-11-20", 
   # MATIC-EUR
-  "2022-02-03", 
-  # MANA-EUR
-  "2022-03-02", 
+  "2022-05-23", 
   # BNB-EUR
   "2022-10-20", 
-  # COIN
-  "2022-03-29",
-  # AMZN
-  "2022-04-08", 
-  "2022-06-16",
-  # META
-  "2022-05-17",
+  # META, 
   "2022-08-01", 
-  # NVDA
-  "2022-05-30", 
   # GFC.PA
   "2022-07-01", 
-  # SU.PA
-  "2022-07-04", 
-  "2022-08-05", 
   # AAPL
   "2022-09-08", 
   "2022-11-09", 
@@ -248,12 +212,9 @@ names(my_buy_dates) <- my_tickers_tx
 
 my_sale_dates <- rep("", n_tx)
 names(my_sale_dates) <- my_tickers_tx 
-my_sale_dates[su_tx] <- rep("2022-08-14", n_su_tx) 
-
   
 my_num_shares <- c(
   # BTC-EUR
-  0.00037241, 
   0.00041181, 
   0.00025110, 
   0.00031765,
@@ -262,34 +223,21 @@ my_num_shares <- c(
   0.00071752, 
   0.00041181,
   0.00073444,
-  0.00069181, 
+  0.00069181,
+  0.00090067, 
   # ETH-EUR
-  0.00594658, 
   0.01296357,
   0.00982442,
   0.00853483, 
   0.01280709,
   # MATIC-EUR
   10.7270573, 
-  # MANA-EUR
-  5.77722346, 
   # BNB-EUR
   0.05197610, 
-  # COIN
-  0.10934065, 
-  # AMZN
-  0.15021685, 
-  0.04869812, 
   # META
-  0.20416538, 
   0.1906, 
-  # NVDA
-  0.22274457, 
   # GFC.PA
   0.334, 
-  # SU.PA
-  0.1601, 
-  0.1269, 
   # AAPL
   0.32014, 
   0.34, 
