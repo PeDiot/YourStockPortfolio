@@ -20,3 +20,14 @@ yf_data[usd_tickers] <- lapply(
   }
   
 )
+
+yf_data[gbx_tickers] <- lapply(
+  
+  X = yf_data[gbx_tickers], 
+  
+  FUN = function(d){
+    d %>%
+      mutate_at(vars(open:close), gbx_to_euros)
+  }
+  
+)

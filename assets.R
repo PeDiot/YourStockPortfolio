@@ -78,6 +78,7 @@ names(crypto_tickers) <- crypto_names
 
 etf_tickers <- c("SPY", 
                  "VTI", 
+                 "SWDA.L", 
                  "IEMG", 
                  "BND",
                  "ARKX",
@@ -95,6 +96,7 @@ etf_tickers <- c("SPY",
 
 etf_names <- c("SPDR S&P 500 Trust", 
                "Vanguard Total Stock Market",
+               "iShares Core MSCI World UCITS ETF", 
                "iShares Core MSCI Emerging Markets", 
                "Vanguard Total Bond Market", 
                "ARK Space Exploration & Innovation", 
@@ -136,7 +138,8 @@ my_tickers <- c("BTC-EUR",
                 "META", 
                 "GFC.PA", 
                 "AAPL", 
-                "VOO")
+                "VOO", 
+                "SWDA.L")
 
 my_tickers_ix <- symbols %>%
   mutate(idxs = 1:nrow(.)) %>% 
@@ -172,7 +175,8 @@ my_tickers_tx <- c(
   "META", 
   "GFC.PA", 
   appl_tx, 
-  "VOO"
+  "VOO", 
+  "SWDA.L"
 )
 
 n_tx <- length(my_tickers_tx)
@@ -206,7 +210,9 @@ my_buy_dates <- c(
   "2022-09-08", 
   "2022-11-09", 
   # VOO
-  "2022-10-17"
+  "2022-10-17", 
+  # SWDA.L
+  "2022-12-07"
 )
 names(my_buy_dates) <- my_tickers_tx
 
@@ -242,7 +248,9 @@ my_num_shares <- c(
   0.32014, 
   0.34, 
   # VOO
-  0.14812
+  0.14812, 
+  # SWDA.L
+  0.67
 )
 
 names(my_num_shares) <- my_tickers_tx
@@ -255,7 +263,10 @@ usd_tickers <- setdiff(
   y = c(cac40_assets$tickers, 
         stoxx600_assets$tickers, 
        "GFC.PA", 
-       "BNK.PA")
+       "BNK.PA", 
+       "SWDA.L")
 )
+
+gbx_tickers <- c("SWDA.L")
 
 my_usd_assets <- intersect(x = usd_tickers, y = my_tickers)
