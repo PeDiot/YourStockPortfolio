@@ -326,12 +326,20 @@ create_tx_table <- function(tickers, buy_dates, sale_dates, num_shares){
   
 }
 
-txUSDEUR <- getQuote("USDEUR=X") %>% pull(Last)
+txUSDEUR <- getQuote("USDEUR=X")["USDEUR=X", "Last"]
+txGBXEUR <- getQuote("GBPEUR=X")["GBPEUR=X", "Last"] * .01 
 
 usd_to_euros <- function(usd_val){
   "Convert USD value to €."
   
   eur_val <- usd_val * txUSDEUR
+  return(eur_val)
+}
+
+gbx_to_euros <- function(gbx_val){
+  "Convert penny sterlings (GBX) to €"
+  
+  eur_val <- gbx_val * txGBXEUR
   return(eur_val)
 }
 
@@ -468,7 +476,7 @@ get_all_assets_total_returns <- function(tickers){
 
 
 compute_daily_returns <- function(asset_dat, portfolio_dat = NULL){
-  "Calculate the daily returns and for our assets."
+  "Calculate the daily returns for our assets."
   
   if ( !(is.null(asset_dat)) ){
     n_tickers <- asset_dat %>% 
