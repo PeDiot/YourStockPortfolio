@@ -83,10 +83,12 @@ ui <- fluidPage(
                           h4(strong("Your Portfolio"),
                              style = "color:#76787B;"), 
                           hr(),
-                          
                           tags$head(tags$style("h5 {color:#76787B;}")),
                           h5(strong("Stocks")), 
-                          HTML("<ul><li>Meta Platforms (IBKR)</li><li>Gecina (IBKR)</li><li>Apple (eToro, IBKR)</li><li>Vanguard S&P 500 ETF (eToro)</li></ul>"),
+                          HTML("<ul><li>Meta Platforms (IBKR)</li><li>Gecina (IBKR)</li><li>Apple (eToro, IBKR)</li></ul>"),
+                          br(), 
+                          h5(strong("ETFs")), 
+                          HTML("<ul><li>Vanguard S&P 500 ETF (eToro)</li><li>iShares Core MSCI World UCITS ETF (eToro)</li></ul>"), 
                           br(), 
                           h5(strong("Cryptocurrencies")), 
                           HTML("<ul><li>BTC (Trust Wallet)</li><li>ETH (Binance)</li><li>BNB (Trust Wallet)</li><li>MATIC (Metamask)</li></ul>"),
@@ -480,5 +482,5 @@ ui <- fluidPage(
 
 # User Authentication ---------------------------------------------------
 
-# ui <- secure_app(ui, theme = shinytheme("lumen"))
+ui <- secure_app(ui, theme = shinytheme("lumen"))
 
