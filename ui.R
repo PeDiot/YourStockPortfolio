@@ -46,9 +46,9 @@ ui <- fluidPage(
                       hr(), 
                       h4(strong("About the app")),
                       p(style="text-align: justify; font-size = 25px",
-                      "This stock portfolio monitoring tool will help you ", 
-                      strong("boost your returns."),  
-                      "The app provides multiple ", 
+                      "This tool will help you to ", 
+                      strong("monitor "), 
+                      "your portfolio with multiple ", 
                       strong("data visualizations "),
                       "and ", 
                       strong("financial analysis."), 
@@ -56,9 +56,9 @@ ui <- fluidPage(
                       a(href = "https://fr.finance.yahoo.com/",
                         target = "_blank",
                         "Yahoo Finance"),
-                      " website. 
+                      " API. 
                                 Feel free to modify the source code in order to select your own assets. 
-                                Go to ",
+                                You can go to ",
                       a(href = "https://github.com/PeDiot/YourStockPortfolio",
                         target = "_blank",
                         icon("github")),
@@ -482,5 +482,5 @@ ui <- fluidPage(
 
 # User Authentication ---------------------------------------------------
 
-ui <- secure_app(ui, theme = shinytheme("lumen"))
+# ui <- secure_app(ui, theme = shinytheme("lumen"))
 
