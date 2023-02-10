@@ -85,16 +85,13 @@ ui <- fluidPage(
                           hr(),
                           tags$head(tags$style("h5 {color:#76787B;}")),
                           h5(strong("Stocks")), 
-                          HTML("<ul><li>Meta Platforms (IBKR)</li><li>Gecina (IBKR)</li><li>Apple (eToro, IBKR)</li></ul>"),
+                          HTML("<ul><li>Meta Platforms</li><li>Gecina</li><li>Apple</li></ul>"),
                           br(), 
                           h5(strong("ETFs")), 
-                          HTML("<ul><li>Vanguard S&P 500 ETF (eToro)</li><li>iShares Core MSCI World UCITS ETF (eToro)</li></ul>"), 
+                          HTML("<ul><li>Vanguard S&P 500 ETF</li><li>iShares Core MSCI World UCITS ETF</li></ul>"), 
                           br(), 
                           h5(strong("Cryptocurrencies")), 
-                          HTML("<ul><li>BTC (Trust Wallet)</li><li>ETH (Binance)</li><li>BNB (Trust Wallet)</li><li>MATIC (Metamask)</li></ul>"),
-                          br(), 
-                          h5(strong("Recurring plans")), 
-                          HTML("<ul><li>BTC (Binance): Monthly, 22th, 21:00</li><li>ETH (Binance): Monthly, 20th, 21:00</li></ul>")
+                          HTML("<ul><li>BTC</li><li>ETH</li><li>BNB</li><li>MATIC</li></ul>")
                         ), 
                         
                         mainPanel(
