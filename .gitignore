@@ -5,3 +5,4 @@
 financial_indicators.html
 *.ini
 server_shiny_worker.R
+assets.R
