@@ -2,15 +2,6 @@
 
 options(warn = -1)
 
-## Credentials -------------------------------------------------------
-credentials <- data.frame(
-  user = c("zeujahh"),
-  password = c("1995poSSe*"),
-  admin = TRUE,
-  comment = "Simple and secure authentification mechanism for single ‘Shiny’ applications.",
-  stringsAsFactors = FALSE
-)
-
 ## Colors -------------------------------------------------------
 
 evolution <- "#709ABE"
